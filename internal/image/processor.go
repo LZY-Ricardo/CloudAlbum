@@ -95,7 +95,7 @@ func DetectImageType(data []byte) string {
 		return "image/png"
 	case bytes.HasPrefix(data, []byte{0x47, 0x49, 0x46}):
 		return "image/gif"
-	case len(data) > 11 && string(data[8:12]) == "webp":
+	case len(data) > 11 && string(data[8:12]) == "WEBP":
 		return "image/webp"
 	case bytes.HasPrefix(data, []byte("BM")):
 		return "image/bmp"
