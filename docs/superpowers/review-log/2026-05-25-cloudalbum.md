@@ -84,3 +84,33 @@ None.
 - Finding #1 → `docs/superpowers/debugging-log/2026-05-25-task5-token-last-used-build-fix.md`
 
 ---
+
+### Review Cycle 4 — 2026-05-25 17:24 CST
+
+**Reviewer type:** CODE_QUALITY
+**Reviewer:** subagent
+**Scope:** Task 5 Database Init + Repository
+**Preceded by:** Review Cycle 3 (Task 5 self-review portability fix already applied)
+
+#### Findings
+
+| # | Severity | Description | Resolution | Commit | Cross-task? |
+|---|----------|-------------|------------|--------|-------------|
+| 1 | IMPORTANT | `cmd/server/main.go` opens sqlite without enabling key pragmas (`foreign_keys`, `busy_timeout`, `journal_mode`), so model foreign keys are not enforced and concurrent handler writes may hit `SQLITE_BUSY`. | FIXED | pending | Also affects Task 7 |
+| 2 | IMPORTANT | `internal/repository/image.go` soft-delete / `OnlyDeleted` listing semantics need to be made explicit and covered by tests so trash listing behavior does not regress silently. | FIXED | pending | Also affects Task 7 |
+| 3 | MINOR | `internal/repository/image.go` pagination accepts non-positive page/pageSize values and can silently produce brittle offsets or empty limits. | FIXED | pending | Also affects Task 7 |
+| 4 | IMPORTANT | `internal/repository` layer has no tests covering deleted-image listing, restore semantics, and aggregate behavior on empty datasets. | FIXED | pending | Also affects Task 7 |
+
+#### Deferred Items
+
+None.
+
+#### Rejected Items
+
+None.
+
+#### Related Debugging
+
+None.
+
+---

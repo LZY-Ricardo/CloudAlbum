@@ -46,9 +46,20 @@ func (r *ImageRepository) List(params ImageListParams) ([]model.Image, int64, er
 	var images []model.Image
 	var total int64
 
-	query := r.db.Model(&model.Image{})
+	page := params.Page
+	if page < 1 {
+		page = 1
+	}
+	pageSize := params.PageSize
+	if pageSize <= 0 {
+		pageSize = 20
+	}
+
+	query := r.db.Unscoped().Model(&model.Image{})
 	if params.OnlyDeleted {
-		query = query.Unscoped().Where("deleted_at IS NOT NULL")
+		query = query.Where("deleted_at IS NOT NULL")
+	} else {
+		query = query.Where("deleted_at IS NULL")
 	}
 	if params.UserID > 0 {
 		query = query.Where("user_id = ?", params.UserID)
@@ -64,8 +75,8 @@ func (r *ImageRepository) List(params ImageListParams) ([]model.Image, int64, er
 		return nil, 0, err
 	}
 
-	offset := (params.Page - 1) * params.PageSize
-	if err := query.Order("created_at DESC").Offset(offset).Limit(params.PageSize).Find(&images).Error; err != nil {
+	offset := (page - 1) * pageSize
+	if err := query.Order("created_at DESC").Offset(offset).Limit(pageSize).Find(&images).Error; err != nil {
 		return nil, 0, err
 	}
 	return images, total, nil
