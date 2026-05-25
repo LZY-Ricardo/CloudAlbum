@@ -1,0 +1,100 @@
+package config
+
+import (
+	"os"
+	"time"
+
+	"gopkg.in/yaml.v3"
+)
+
+type Config struct {
+	Server   ServerConfig   `yaml:"server"`
+	Database DatabaseConfig `yaml:"database"`
+	Storage  StorageConfig  `yaml:"storage"`
+	Image    ImageConfig    `yaml:"image"`
+	Auth     AuthConfig     `yaml:"auth"`
+}
+
+type ServerConfig struct {
+	Port    int    `yaml:"port"`
+	BaseURL string `yaml:"base_url"`
+}
+
+type DatabaseConfig struct {
+	Driver string `yaml:"driver"`
+	DSN    string `yaml:"dsn"`
+}
+
+type StorageConfig struct {
+	Driver string        `yaml:"driver"`
+	Local  LocalStorage  `yaml:"local"`
+	S3     S3StorageConf `yaml:"s3"`
+}
+
+type LocalStorage struct {
+	Path string `yaml:"path"`
+}
+
+type S3StorageConf struct {
+	Bucket   string `yaml:"bucket"`
+	Region   string `yaml:"region"`
+	Endpoint string `yaml:"endpoint"`
+	AK       string `yaml:"access_key"`
+	SK       string `yaml:"secret_key"`
+}
+
+type ThumbnailSize struct {
+	Name   string `yaml:"name"`
+	Width  int    `yaml:"width"`
+	Height int    `yaml:"height"`
+}
+
+type ImageConfig struct {
+	MaxSize      int64           `yaml:"max_size"`
+	AllowedTypes []string        `yaml:"allowed_types"`
+	AutoConvert  string          `yaml:"auto_convert"`
+	Quality      int             `yaml:"quality"`
+	StripExif    bool            `yaml:"strip_exif"`
+	Thumbnails   []ThumbnailSize `yaml:"thumbnails"`
+}
+
+type AuthConfig struct {
+	JWTSecret   string        `yaml:"jwt_secret"`
+	TokenExpire time.Duration `yaml:"token_expire"`
+}
+
+func Load(path string) (*Config, error) {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return nil, err
+	}
+	var cfg Config
+	if err := yaml.Unmarshal(data, &cfg); err != nil {
+		return nil, err
+	}
+	if cfg.Server.Port == 0 {
+		cfg.Server.Port = 8080
+	}
+	if cfg.Database.Driver == "" {
+		cfg.Database.Driver = "sqlite"
+	}
+	if cfg.Database.DSN == "" {
+		cfg.Database.DSN = "./data/cloudalbum.db"
+	}
+	if cfg.Storage.Driver == "" {
+		cfg.Storage.Driver = "local"
+	}
+	if cfg.Storage.Local.Path == "" {
+		cfg.Storage.Local.Path = "./data/images"
+	}
+	if cfg.Image.MaxSize == 0 {
+		cfg.Image.MaxSize = 50 << 20
+	}
+	if cfg.Image.Quality == 0 {
+		cfg.Image.Quality = 85
+	}
+	if cfg.Auth.TokenExpire == 0 {
+		cfg.Auth.TokenExpire = 7 * 24 * time.Hour
+	}
+	return &cfg, nil
+}

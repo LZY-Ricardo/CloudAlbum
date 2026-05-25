@@ -1,0 +1,46 @@
+server:
+  port: 8080
+  base_url: "http://localhost:8080"
+
+database:
+  driver: sqlite
+  dsn: "./data/cloudalbum.db"
+
+storage:
+  driver: local
+  local:
+    path: "./data/images"
+  s3:
+    bucket: ""
+    region: ""
+    endpoint: ""
+    access_key: ""
+    secret_key: ""
+
+image:
+  max_size: 52428800
+  allowed_types:
+    - jpg
+    - jpeg
+    - png
+    - gif
+    - webp
+    - bmp
+    - svg
+  auto_convert: webp
+  quality: 85
+  strip_exif: true
+  thumbnails:
+    - name: thumb
+      width: 200
+      height: 200
+    - name: medium
+      width: 800
+      height: 600
+    - name: large
+      width: 1200
+      height: 900
+
+auth:
+  jwt_secret: "change-me-in-production"
+  token_expire: 168h
