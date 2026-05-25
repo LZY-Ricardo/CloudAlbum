@@ -9,8 +9,14 @@ import (
 	"strings"
 
 	"cloudalbum/internal/config"
+	"cloudalbum/internal/handler"
+	imgpkg "cloudalbum/internal/image"
 	"cloudalbum/internal/model"
+	"cloudalbum/internal/repository"
+	"cloudalbum/internal/router"
+	"cloudalbum/internal/service"
 	"cloudalbum/internal/storage"
+	"github.com/gin-gonic/gin"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -31,6 +37,30 @@ func main() {
 		log.Fatalf("Failed to init storage: %v", err)
 	}
 
+	userRepo := repository.NewUserRepository(db)
+	imageRepo := repository.NewImageRepository(db)
+	albumRepo := repository.NewAlbumRepository(db)
+	tokenRepo := repository.NewTokenRepository(db)
+
+	authSvc := service.NewAuthService(userRepo, tokenRepo, cfg.Auth)
+	tokenSvc := service.NewTokenService(tokenRepo)
+	processor := imgpkg.NewProcessor(cfg.Image)
+	imageSvc := service.NewImageService(imageRepo, store, processor, cfg.Image, cfg.Server.BaseURL)
+	albumSvc := service.NewAlbumService(albumRepo, imageRepo)
+
+	authHandler := handler.NewAuthHandler(authSvc)
+	tokenHandler := handler.NewTokenHandler(tokenSvc)
+	imageHandler := handler.NewImageHandler(imageSvc)
+	albumHandler := handler.NewAlbumHandler(albumSvc)
+	publicHandler := handler.NewPublicHandler(store, processor)
+
+	if err := authSvc.EnsureAdmin("admin", "admin123"); err != nil {
+		log.Fatalf("Failed to ensure admin user: %v", err)
+	}
+
+	r := gin.Default()
+	router.Setup(r, authSvc, tokenSvc, imageSvc, albumSvc, authHandler, tokenHandler, imageHandler, albumHandler, publicHandler)
+
 	fmt.Printf("CloudAlbum starting on :%d\n", cfg.Server.Port)
 	fmt.Printf("Database: %s (%s)\n", cfg.Database.Driver, cfg.Database.DSN)
 	if localStore, ok := store.(*storage.LocalStorage); ok {
@@ -39,7 +69,9 @@ func main() {
 		fmt.Printf("Storage: %s\n", cfg.Storage.Driver)
 	}
 
-	_ = db
+	if err := r.Run(fmt.Sprintf(":%d", cfg.Server.Port)); err != nil {
+		log.Fatalf("Server error: %v", err)
+	}
 }
 
 func initDB(cfg *config.Config) (*gorm.DB, error) {

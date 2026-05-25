@@ -9,7 +9,7 @@ import (
 type Image struct {
 	ID           uint           `gorm:"primaryKey" json:"id"`
 	UserID       uint           `gorm:"index;not null" json:"user_id"`
-	StorageKey   string         `gorm:"uniqueIndex;size:255;not null" json:"storage_key"`
+	StorageKey   string         `gorm:"index;size:255;not null" json:"storage_key"`
 	Filename     string         `gorm:"size:255;not null" json:"filename"`
 	OriginalName string         `gorm:"size:255;not null" json:"original_name"`
 	Size         int64          `json:"size"`
@@ -20,6 +20,6 @@ type Image struct {
 	AlbumID      *uint          `gorm:"index" json:"album_id"`
 	CreatedAt    time.Time      `json:"created_at"`
 	DeletedAt    gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
-	User  User   `gorm:"foreignKey:UserID" json:"-"`
-	Album *Album `gorm:"foreignKey:AlbumID" json:"-"`
+	User         User           `gorm:"foreignKey:UserID" json:"-"`
+	Album        *Album         `gorm:"foreignKey:AlbumID" json:"-"`
 }

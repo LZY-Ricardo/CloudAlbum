@@ -191,3 +191,35 @@ None.
 - Finding #4 → `docs/superpowers/debugging-log/2026-05-25-auth-test-shared-sqlite-memory.md`
 
 ---
+
+### Review Cycle 7 — 2026-05-25 20:14 CST
+
+**Cycle ID:** RC-7
+**Reviewer type:** CODE_QUALITY
+**Reviewer:** subagent
+**Scope:** Task 7 Image + Album API + Router
+**Preceded by:** Task 7 implementation and verification
+
+#### Findings
+
+| # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
+|---|----------|-------------|------------|-----------------|--------|-------------|
+| 1 | IMPORTANT | `internal/service/image.go` remote URL upload path has duplicate-content handling and storage-key reuse semantics that need explicit consistency with local upload behavior. | FIXED | OPEN | pending | Also affects Task 10 |
+| 2 | IMPORTANT | `internal/service/image.go` and `internal/handler/image.go` need to distinguish omitted `album_id` from explicit `null` during image update, otherwise album assignment can be cleared unexpectedly. | FIXED | OPEN | pending | Also affects Task 10 |
+| 3 | IMPORTANT | `internal/service/album.go` and `internal/handler/album.go` overwrite album fields when `name` or `cover_image_id` are omitted, causing partial updates to clear existing values. | FIXED | OPEN | pending | Also affects Task 10 |
+| 4 | MINOR | `internal/router/router.go` includes a redundant group-level `RequireScope` on image routes, increasing fragility for future route additions and middleware ordering changes. | FIXED | OPEN | pending | Also affects Task 10 |
+| 5 | IMPORTANT | The Task 7 behavior changes need minimal regression tests to lock in update semantics and avoid future regressions. | FIXED | OPEN | pending | Also affects Task 10 |
+
+#### Deferred Items
+
+None.
+
+#### Rejected Items
+
+None.
+
+#### Related Debugging
+
+None.
+
+---

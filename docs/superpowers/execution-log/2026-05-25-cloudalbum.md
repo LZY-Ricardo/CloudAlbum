@@ -155,3 +155,19 @@
 - `docs/superpowers/debugging-log/2026-05-25-auth-test-shared-sqlite-memory.md`
 
 ---
+
+#### Verification — Task 7
+
+**Timestamp:** 2026-05-25 20:05 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Task 7 package tests | `go test ./internal/service ./internal/handler` | PASS | Verified new image/album service behavior and public image serving headers/not-found behavior. |
+| Build | `go build ./...` | PASS | Full repository build succeeded after adding image/album APIs, router setup, and server wiring. |
+| Startup smoke test | `python3` controlled startup script running `go run ./cmd/server/main.go` on temporary port `18080` plus `POST /api/v1/auth/login` | PASS | Local port `8080` was already occupied by unrelated processes, so verification used a temporary config override (`18080`) and restored `configs/config.yaml` immediately afterward. Login returned HTTP 200 with a JWT token. |
+
+**Uncovered areas:**
+- No end-to-end multipart upload HTTP test was added; upload flows are covered at service level plus compile/startup verification only.
+- Public thumbnail route behavior beyond storage lookup and headers was not exercised with generated thumbnail files in an integration test.
+
+---
