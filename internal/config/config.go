@@ -96,5 +96,24 @@ func Load(path string) (*Config, error) {
 	if cfg.Auth.TokenExpire == 0 {
 		cfg.Auth.TokenExpire = 7 * 24 * time.Hour
 	}
+	if cfg.Server.BaseURL == "" {
+		cfg.Server.BaseURL = "http://localhost:8080"
+	}
+	if cfg.Auth.JWTSecret == "" {
+		cfg.Auth.JWTSecret = "change-me-in-production"
+	}
+	if len(cfg.Image.AllowedTypes) == 0 {
+		cfg.Image.AllowedTypes = []string{"jpg", "jpeg", "png", "gif", "webp", "bmp", "svg"}
+	}
+	if cfg.Image.AutoConvert == "" {
+		cfg.Image.AutoConvert = "webp"
+	}
+	if len(cfg.Image.Thumbnails) == 0 {
+		cfg.Image.Thumbnails = []ThumbnailSize{
+			{Name: "thumb", Width: 200, Height: 200},
+			{Name: "medium", Width: 800, Height: 600},
+			{Name: "large", Width: 1200, Height: 900},
+		}
+	}
 	return &cfg, nil
 }
