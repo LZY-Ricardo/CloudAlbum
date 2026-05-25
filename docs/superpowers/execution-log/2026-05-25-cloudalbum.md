@@ -28,7 +28,7 @@
 - Create the sqlite parent directory in startup code rather than relying on the database driver to create nested paths implicitly.
 - Print the resolved local storage root only when the configured storage backend is `local`, keeping the startup log backend-aware.
 
-**Commits:** `pending`
+**Commits:** `c038667`
 
 **Related debugging:**
 - → `docs/superpowers/debugging-log/2026-05-25-task5-token-last-used-build-fix.md`
@@ -105,5 +105,20 @@
 
 **Related debugging:**
 - `docs/superpowers/debugging-log/2026-05-25-task5-token-last-used-build-fix.md`
+
+---
+
+#### Verification — Task 28
+
+**Timestamp:** 2026-05-25 17:27 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Repository tests | `go test ./internal/repository` | PASS | Verified deleted-only listing semantics, restore behavior, empty aggregate handling, and default pagination guards. |
+| Build | `go build ./...` | PASS | Full repository build succeeded after sqlite DSN and repository fixes. |
+
+**Uncovered areas:**
+- Task 28 did not exercise HTTP-layer consumers yet; repository behavior is covered at package level only.
+- Album deletion policy and broader repository contracts remain intentionally out of scope for this remediation.
 
 ---

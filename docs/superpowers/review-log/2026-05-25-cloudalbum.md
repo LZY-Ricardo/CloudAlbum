@@ -70,7 +70,7 @@ None.
 
 | # | Severity | Description | Resolution | Commit | Cross-task? |
 |---|----------|-------------|------------|--------|-------------|
-| 1 | IMPORTANT | `internal/repository/token.go` used `gorm.Expr("NOW()")` for `UpdateLastUsed`, which is not portable to sqlite and could fail when token usage is updated on the default database backend. | FIXED | pending | Also affects Task 6, 7 |
+| 1 | IMPORTANT | `internal/repository/token.go` used `gorm.Expr("NOW()")` for `UpdateLastUsed`, which is not portable to sqlite and could fail when token usage is updated on the default database backend. | FIXED | e52b3e4 | Also affects Task 6, 7 |
 
 #### Deferred Items
 
@@ -96,10 +96,10 @@ None.
 
 | # | Severity | Description | Resolution | Commit | Cross-task? |
 |---|----------|-------------|------------|--------|-------------|
-| 1 | IMPORTANT | `cmd/server/main.go` opens sqlite without enabling key pragmas (`foreign_keys`, `busy_timeout`, `journal_mode`), so model foreign keys are not enforced and concurrent handler writes may hit `SQLITE_BUSY`. | FIXED | pending | Also affects Task 7 |
-| 2 | IMPORTANT | `internal/repository/image.go` soft-delete / `OnlyDeleted` listing semantics need to be made explicit and covered by tests so trash listing behavior does not regress silently. | FIXED | pending | Also affects Task 7 |
-| 3 | MINOR | `internal/repository/image.go` pagination accepts non-positive page/pageSize values and can silently produce brittle offsets or empty limits. | FIXED | pending | Also affects Task 7 |
-| 4 | IMPORTANT | `internal/repository` layer has no tests covering deleted-image listing, restore semantics, and aggregate behavior on empty datasets. | FIXED | pending | Also affects Task 7 |
+| 1 | IMPORTANT | `cmd/server/main.go` opens sqlite without enabling key pragmas (`foreign_keys`, `busy_timeout`, `journal_mode`), so model foreign keys are not enforced and concurrent handler writes may hit `SQLITE_BUSY`. | FIXED | e52b3e4 | Also affects Task 7 |
+| 2 | IMPORTANT | `internal/repository/image.go` soft-delete / `OnlyDeleted` listing semantics need to be made explicit and covered by tests so trash listing behavior does not regress silently. | FIXED | e52b3e4 | Also affects Task 7 |
+| 3 | MINOR | `internal/repository/image.go` pagination accepts non-positive page/pageSize values and can silently produce brittle offsets or empty limits. | FIXED | e52b3e4 | Also affects Task 7 |
+| 4 | IMPORTANT | `internal/repository` layer has no tests covering deleted-image listing, restore semantics, and aggregate behavior on empty datasets. | FIXED | e52b3e4 | Also affects Task 7 |
 
 #### Deferred Items
 
