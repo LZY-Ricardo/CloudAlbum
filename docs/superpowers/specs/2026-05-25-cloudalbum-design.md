@@ -269,6 +269,9 @@ image:
     - name: medium
       width: 800
       height: 600
+    - name: large
+      width: 1200
+      height: 900
 
 auth:
   jwt_secret: ""
