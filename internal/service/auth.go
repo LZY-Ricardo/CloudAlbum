@@ -78,7 +78,10 @@ func (s *AuthService) Login(username, password string) (string, error) {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(password)); err != nil {
-		return "", ErrInvalidCredentials
+		if errors.Is(err, bcrypt.ErrMismatchedHashAndPassword) {
+			return "", ErrInvalidCredentials
+		}
+		return "", err
 	}
 
 	return s.GenerateJWT(user)

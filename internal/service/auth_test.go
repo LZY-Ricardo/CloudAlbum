@@ -55,6 +55,28 @@ func TestAuthServiceLoginInvalidCredentials(t *testing.T) {
 	}
 }
 
+func TestAuthServiceLoginCorruptHashReturnsBackendError(t *testing.T) {
+	db := newTestAuthServiceDB(t)
+	if err := db.Model(&model.User{}).Where("username = ?", "auth-user").Update("password_hash", "not-a-bcrypt-hash").Error; err != nil {
+		t.Fatalf("corrupt password hash: %v", err)
+	}
+
+	userRepo := repository.NewUserRepository(db)
+	tokenRepo := repository.NewTokenRepository(db)
+	authSvc := NewAuthService(userRepo, tokenRepo, config.AuthConfig{
+		JWTSecret:   "test-secret",
+		TokenExpire: time.Hour,
+	})
+
+	_, err := authSvc.Login("auth-user", "password123")
+	if err == nil {
+		t.Fatal("Login() error = nil, want backend error")
+	}
+	if errors.Is(err, ErrInvalidCredentials) {
+		t.Fatalf("Login() error = %v, should not be classified as invalid credentials", err)
+	}
+}
+
 func newTestAuthServiceDB(t *testing.T) *gorm.DB {
 	t.Helper()
 

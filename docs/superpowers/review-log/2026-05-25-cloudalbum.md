@@ -127,9 +127,9 @@ None.
 
 | # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
 |---|----------|-------------|------------|-----------------|--------|-------------|
-| 1 | IMPORTANT | `internal/handler/auth.go` maps every `AuthService.Login()` error to 401 and returns raw error text, which can misclassify repository/database failures as credential failures and leak backend error details. | FIXED | OPEN | pending | Also affects Task 7 |
-| 2 | IMPORTANT | `internal/handler/token.go` `Delete()` maps all non-not-found failures to 403, so operational/database failures are mislabeled as authorization problems. | FIXED | OPEN | pending | Also affects Task 7 |
-| 3 | MINOR | `internal/service/token_test.go` only covers API token create/validate and does not exercise JWT/login or middleware branching. | FIXED | OPEN | pending | Also affects Task 7 |
+| 1 | IMPORTANT | `internal/handler/auth.go` maps every `AuthService.Login()` error to 401 and returns raw error text, which can misclassify repository/database failures as credential failures and leak backend error details. | FIXED | OPEN | 2525a38 | Also affects Task 7 |
+| 2 | IMPORTANT | `internal/handler/token.go` `Delete()` maps all non-not-found failures to 403, so operational/database failures are mislabeled as authorization problems. | FIXED | OPEN | 2525a38 | Also affects Task 7 |
+| 3 | MINOR | `internal/service/token_test.go` only covers API token create/validate and does not exercise JWT/login or middleware branching. | FIXED | OPEN | 2525a38 | Also affects Task 7 |
 
 #### Deferred Items
 
@@ -142,5 +142,52 @@ None.
 #### Related Debugging
 
 None.
+
+---
+
+### Review Cycle 6 — 2026-05-25 19:44 CST
+
+**Cycle ID:** RC-6
+**Reviewer type:** CODE_QUALITY
+**Reviewer:** subagent
+**Scope:** Task 6 Auth System
+**Preceded by:** Review Cycle 5
+**Re-check of:** Review Cycle 5
+**Original reviewer:** subagent
+**Re-check reviewer:** fresh reviewer (original reviewer unavailable in-session)
+
+#### Findings
+
+| # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
+|---|----------|-------------|------------|-----------------|--------|-------------|
+| 1 | IMPORTANT | `internal/handler/auth.go` maps every `AuthService.Login()` error to 401 and returns raw error text, which can misclassify repository/database failures as credential failures and leak backend error details. | FIXED | VERIFIED_FIXED | 2525a38 | Also affects Task 7 |
+| 2 | IMPORTANT | `internal/handler/token.go` `Delete()` maps all non-not-found failures to 403, so operational/database failures are mislabeled as authorization problems. | FIXED | VERIFIED_FIXED | 2525a38 | Also affects Task 7 |
+| 3 | MINOR | `internal/service/token_test.go` only covers API token create/validate and does not exercise JWT/login or middleware branching. | FIXED | VERIFIED_FIXED | 2525a38 | Also affects Task 7 |
+| 4 | IMPORTANT | `AuthService.Login()` still classified corrupted bcrypt hashes as invalid credentials instead of backend failure, so the original finding #1 was only partially fixed in the first patch. | FIXED | NEW_FINDING | pending | Also affects Task 7 |
+
+#### Re-check Summary
+
+- **Finding #1:** Verified fixed after separating invalid-credential handling from backend failures and removing raw internal error exposure from `AuthHandler.Login()`.
+- **Finding #2:** Verified fixed after `TokenHandler.Delete()` now distinguishes not found, forbidden, and backend failures.
+- **Finding #3:** Verified fixed after adding `auth_test.go` coverage for JWT login/parsing and invalid-credential behavior.
+- **Fallback reason:** original reviewer unavailable as a reusable in-session reviewer, so a fresh reviewer was used for the re-check.
+- **Verification evidence reviewed:** `go test ./internal/service` PASS, `go build ./...` PASS.
+
+#### New Findings During Re-check
+
+**Finding #4:** `AuthService.Login()` still treated corrupted bcrypt hashes as invalid credentials.
+- **Status of prior finding:** original handler-level issue was partially fixed, but the service still collapsed one backend failure path into a credential error.
+- **Action:** fixed immediately by only mapping `bcrypt.ErrMismatchedHashAndPassword` to `ErrInvalidCredentials` and adding a regression test for corrupted hashes.
+
+#### Deferred Items
+
+None.
+
+#### Rejected Items
+
+None.
+
+#### Related Debugging
+- Finding #4 → `docs/superpowers/debugging-log/2026-05-25-auth-test-shared-sqlite-memory.md`
 
 ---
