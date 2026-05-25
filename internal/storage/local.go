@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type LocalStorage struct {
@@ -23,8 +24,29 @@ func NewLocalStorage(basePath string) (*LocalStorage, error) {
 	return &LocalStorage{basePath: absPath}, nil
 }
 
-func (s *LocalStorage) fullPath(key string) string {
-	return filepath.Join(s.basePath, key)
+func (s *LocalStorage) resolvePath(key string) (string, error) {
+	if key == "" {
+		return "", fmt.Errorf("invalid storage key: empty")
+	}
+	if filepath.IsAbs(key) {
+		return "", fmt.Errorf("invalid storage key %q: absolute paths are not allowed", key)
+	}
+
+	cleanKey := filepath.Clean(key)
+	if cleanKey == "." {
+		return "", fmt.Errorf("invalid storage key %q", key)
+	}
+
+	fullPath := filepath.Join(s.basePath, cleanKey)
+	rel, err := filepath.Rel(s.basePath, fullPath)
+	if err != nil {
+		return "", fmt.Errorf("resolve storage key %q: %w", key, err)
+	}
+	if rel == ".." || strings.HasPrefix(rel, ".."+string(filepath.Separator)) {
+		return "", fmt.Errorf("invalid storage key %q: path escapes storage root", key)
+	}
+
+	return fullPath, nil
 }
 
 func (s *LocalStorage) String() string {
@@ -32,7 +54,10 @@ func (s *LocalStorage) String() string {
 }
 
 func (s *LocalStorage) Save(_ context.Context, key string, data io.Reader) error {
-	fullPath := s.fullPath(key)
+	fullPath, err := s.resolvePath(key)
+	if err != nil {
+		return err
+	}
 	dir := filepath.Dir(fullPath)
 	if err := os.MkdirAll(dir, 0755); err != nil {
 		return fmt.Errorf("create directory: %w", err)
@@ -50,18 +75,28 @@ func (s *LocalStorage) Save(_ context.Context, key string, data io.Reader) error
 }
 
 func (s *LocalStorage) Get(_ context.Context, key string) (io.ReadCloser, error) {
-	f, err := os.Open(s.fullPath(key))
+	fullPath, err := s.resolvePath(key)
+	if err != nil {
+		return nil, err
+	}
+
+	f, err := os.Open(fullPath)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("file not found: %s", key)
+			return nil, fmt.Errorf("file not found %q: %w", key, err)
 		}
-		return nil, fmt.Errorf("open file: %w", err)
+		return nil, fmt.Errorf("open file %q: %w", key, err)
 	}
 	return f, nil
 }
 
 func (s *LocalStorage) Exists(_ context.Context, key string) (bool, error) {
-	_, err := os.Stat(s.fullPath(key))
+	fullPath, err := s.resolvePath(key)
+	if err != nil {
+		return false, err
+	}
+
+	_, err = os.Stat(fullPath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return false, nil
@@ -72,8 +107,13 @@ func (s *LocalStorage) Exists(_ context.Context, key string) (bool, error) {
 }
 
 func (s *LocalStorage) Delete(_ context.Context, key string) error {
-	if err := os.Remove(s.fullPath(key)); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("delete file: %w", err)
+	fullPath, err := s.resolvePath(key)
+	if err != nil {
+		return err
+	}
+
+	if err := os.Remove(fullPath); err != nil && !os.IsNotExist(err) {
+		return fmt.Errorf("delete file %q: %w", key, err)
 	}
 	return nil
 }

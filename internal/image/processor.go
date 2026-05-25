@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/disintegration/imaging"
 
@@ -46,13 +47,13 @@ func (p *Processor) Process(data []byte, mimeType string) (*ProcessResult, error
 	hash := sha256.Sum256(data)
 	result.Hash = hex.EncodeToString(hash[:])
 
-	encFormat := mimeTypeToImaging(mimeType)
+	thumbFormat, thumbOptions := p.thumbnailEncoding()
 
 	result.Thumbnails = make(map[string][]byte)
 	for _, size := range p.cfg.Thumbnails {
 		thumb := imaging.Thumbnail(img, size.Width, size.Height, imaging.Lanczos)
 		var buf bytes.Buffer
-		if err := imaging.Encode(&buf, thumb, encFormat, imaging.JPEGQuality(p.cfg.Quality)); err != nil {
+		if err := imaging.Encode(&buf, thumb, thumbFormat, thumbOptions...); err != nil {
 			return nil, fmt.Errorf("encode thumbnail %s: %w", size.Name, err)
 		}
 		result.Thumbnails[size.Name] = buf.Bytes()
@@ -65,14 +66,16 @@ func (p *Processor) GenerateThumbnailKey(originalKey, sizeName string) string {
 	return fmt.Sprintf("thumbs/%s_%s", sizeName, originalKey)
 }
 
-func mimeTypeToImaging(mimeType string) imaging.Format {
-	switch mimeType {
-	case "image/png":
-		return imaging.PNG
-	case "image/gif":
-		return imaging.GIF
+func (p *Processor) thumbnailEncoding() (imaging.Format, []imaging.EncodeOption) {
+	switch strings.ToLower(p.cfg.AutoConvert) {
+	case "", "jpg", "jpeg", "webp":
+		return imaging.JPEG, []imaging.EncodeOption{imaging.JPEGQuality(p.cfg.Quality)}
+	case "png":
+		return imaging.PNG, nil
+	case "gif":
+		return imaging.GIF, nil
 	default:
-		return imaging.JPEG
+		return imaging.JPEG, []imaging.EncodeOption{imaging.JPEGQuality(p.cfg.Quality)}
 	}
 }
 
@@ -92,12 +95,38 @@ func DetectImageType(data []byte) string {
 		return "image/png"
 	case bytes.HasPrefix(data, []byte{0x47, 0x49, 0x46}):
 		return "image/gif"
-	case len(data) > 11 && string(data[8:12]) == "WEBP":
+	case hasWebPSignature(data):
 		return "image/webp"
 	case bytes.HasPrefix(data, []byte("BM")):
 		return "image/bmp"
-	case bytes.HasPrefix(data, []byte("<?xml")) || bytes.HasPrefix(data, []byte("<svg")):
+	case looksLikeSVG(data):
 		return "image/svg+xml"
 	}
 	return ""
+}
+
+func hasWebPSignature(data []byte) bool {
+	return len(data) >= 12 && bytes.HasPrefix(data, []byte("RIFF")) && string(data[8:12]) == "WEBP"
+}
+
+func looksLikeSVG(data []byte) bool {
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) == 0 {
+		return false
+	}
+
+	lower := strings.ToLower(string(trimmed))
+	if strings.HasPrefix(lower, "<svg") {
+		return true
+	}
+	if strings.HasPrefix(lower, "<?xml") {
+		end := strings.Index(lower, "?>")
+		if end == -1 {
+			return false
+		}
+		rest := strings.TrimSpace(lower[end+2:])
+		return strings.HasPrefix(rest, "<svg")
+	}
+
+	return false
 }
