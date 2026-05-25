@@ -114,3 +114,33 @@ None.
 None.
 
 ---
+
+### Review Cycle 5 — 2026-05-25 19:38 CST
+
+**Cycle ID:** RC-5
+**Reviewer type:** CODE_QUALITY
+**Reviewer:** subagent
+**Scope:** Task 6 Auth System
+**Preceded by:** Task 6 implementation and focused verification
+
+#### Findings
+
+| # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
+|---|----------|-------------|------------|-----------------|--------|-------------|
+| 1 | IMPORTANT | `internal/handler/auth.go` maps every `AuthService.Login()` error to 401 and returns raw error text, which can misclassify repository/database failures as credential failures and leak backend error details. | FIXED | OPEN | pending | Also affects Task 7 |
+| 2 | IMPORTANT | `internal/handler/token.go` `Delete()` maps all non-not-found failures to 403, so operational/database failures are mislabeled as authorization problems. | FIXED | OPEN | pending | Also affects Task 7 |
+| 3 | MINOR | `internal/service/token_test.go` only covers API token create/validate and does not exercise JWT/login or middleware branching. | FIXED | OPEN | pending | Also affects Task 7 |
+
+#### Deferred Items
+
+None.
+
+#### Rejected Items
+
+None.
+
+#### Related Debugging
+
+None.
+
+---

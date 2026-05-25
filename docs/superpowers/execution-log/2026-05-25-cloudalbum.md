@@ -122,3 +122,36 @@
 - Album deletion policy and broader repository contracts remain intentionally out of scope for this remediation.
 
 ---
+
+#### Verification — Task 6
+
+**Timestamp:** 2026-05-25 17:40 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Focused service test | `go test ./internal/service` | PASS | Verified API token creation/validation flow, raw token prefixing, hashed persistence, and last-used timestamp updates. |
+| Build | `go build ./...` | PASS | Full repository build succeeded after adding auth services, middleware, and handlers. |
+
+**Uncovered areas:**
+- No HTTP-layer handler or middleware integration tests were added in this task; verification remained at focused service coverage plus full compile.
+- Router wiring and end-to-end login/token request flows are intentionally deferred to Task 7.
+
+---
+
+#### Verification — Task 6 (post-review fixes)
+
+**Timestamp:** 2026-05-25 19:42 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Service tests | `go test ./internal/service` | PASS | Verified JWT login/parsing and API token create/validate after fixing handler error mapping and test isolation. |
+| Build | `go build ./...` | PASS | Full repository build succeeded after Task 6 review fixes. |
+
+**Uncovered areas:**
+- No HTTP handler or middleware integration tests were added yet; verification remains at service-level tests plus full compile.
+- Router wiring and end-to-end auth request flows remain intentionally deferred to Task 7.
+
+**Related debugging:**
+- `docs/superpowers/debugging-log/2026-05-25-auth-test-shared-sqlite-memory.md`
+
+---
