@@ -183,7 +183,78 @@ Go 后端提供 RESTful API，React 前端构建后将静态文件通过 `go:emb
 
 ## 管理后台
 
-基于 React + Arco Design。
+基于 React + Arco Design（Arco Dark 主题 + 自定义样式覆盖）。
+
+### 视觉风格：毛玻璃 + 青绿渐变（暗色主题）
+
+整体调性：深色底、毛玻璃卡片、青绿渐变强调色，现代感强，图片内容突出。
+
+**设计令牌 (Design Tokens):**
+
+```css
+:root {
+  /* 背景层 */
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #111118;
+  --bg-card: rgba(255, 255, 255, 0.04);
+  --bg-card-hover: rgba(255, 255, 255, 0.07);
+  --bg-glass: rgba(255, 255, 255, 0.05);
+  --bg-sidebar: rgba(17, 17, 24, 0.8);
+
+  /* 强调色 */
+  --accent-from: #06b6d4;
+  --accent-to: #10b981;
+  --accent-solid: #06b6d4;
+  --accent-glow: rgba(6, 182, 212, 0.15);
+
+  /* 文字 */
+  --text-primary: #f0f0f5;
+  --text-secondary: #9ca3af;
+  --text-muted: #6b7280;
+
+  /* 边框 */
+  --border: rgba(255, 255, 255, 0.08);
+  --border-hover: rgba(255, 255, 255, 0.15);
+
+  /* 状态色 */
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+
+  /* 圆角 */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+
+  /* 阴影 */
+  --shadow-card: 0 4px 24px rgba(0, 0, 0, 0.3);
+  --shadow-glow: 0 0 20px rgba(6, 182, 212, 0.2);
+}
+```
+
+**字体:**
+- 标题: `Outfit` (Google Fonts) — 几何无衬线，现代感
+- 正文: `DM Sans` (Google Fonts) — 清晰易读
+- 中文回退: `system-ui, "PingFang SC", "Microsoft YaHei"`
+
+**核心视觉效果:**
+1. **毛玻璃卡片** — `backdrop-filter: blur(20px)` + 半透明背景 + 微边框
+2. **渐变强调** — 按钮、选中态、进度条使用 `linear-gradient(135deg, #06b6d4, #10b981)`
+3. **悬浮微动效** — 卡片 hover 上浮 2px + 边框渐亮 + 轻微阴影增强
+4. **图片卡片** — hover 时底部渐变遮罩渐显，操作按钮淡入
+5. **页面加载** — stagger fade-in（子元素依次渐现，间隔 50ms）
+6. **侧边栏** — 毛玻璃背景 + 选中项渐变高亮条
+7. **上传区域** — 虚线边框呼吸动画 + 拖入时边框变实线 + 渐变边框
+8. **灯箱** — 深色 overlay + 模糊背景 + 图片 scale-in 动画
+
+**按钮样式:**
+- 主要按钮: 渐变背景 (#06b6d4 → #10b981)，hover 时渐变位移，无圆角膨胀
+- 次要按钮: 透明底 + 渐变边框
+- 危险按钮: #ef4444 实色
+
+**表格/列表:**
+- 斑马纹用 rgba(255,255,255,0.02) 交替
+- 行 hover 用 rgba(255,255,255,0.05)
 
 ### 页面
 
