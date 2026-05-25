@@ -36,6 +36,6 @@ docs/superpowers/
 
 | Feature | Status | Spec | Plan | Execution | Review | Completion |
 |---------|--------|------|------|-----------|--------|------------|
-| CloudAlbum 图床 | Planning | [spec](specs/2026-05-25-cloudalbum-design.md) | — | — | — | — |
+| CloudAlbum 图床 | In Progress | [spec](specs/2026-05-25-cloudalbum-design.md) | [plan](plans/2026-05-25-cloudalbum.md) | [log](execution-log/2026-05-25-cloudalbum.md) | [review](review-log/2026-05-25-cloudalbum.md) | — |
 
 Status: `Planning` | `In Progress` | `In Review` | `Complete` | `On Hold`
