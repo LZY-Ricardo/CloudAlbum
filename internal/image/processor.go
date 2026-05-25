@@ -85,9 +85,6 @@ func HashFromReader(r io.Reader) (string, error) {
 }
 
 func DetectImageType(data []byte) string {
-	if len(data) < 512 {
-		return ""
-	}
 	switch {
 	case bytes.HasPrefix(data, []byte{0xFF, 0xD8}):
 		return "image/jpeg"
