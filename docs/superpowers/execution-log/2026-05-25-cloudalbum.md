@@ -277,3 +277,18 @@
 - 分页、搜索 debounce、复制反馈、预览可访问性已明确延期到 Task 11 处理。
 
 ---
+
+#### Verification — Task 11
+
+**Timestamp:** 2026-05-26 15:38 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Frontend build | `cd web && npm run build` | PASS | Vite build completed successfully; only bundle-size warnings were reported. |
+| Dev server smoke test | `cd web && npm run dev -- --host 127.0.0.1` | PASS | Dev server started successfully on `http://127.0.0.1:3000/`. |
+
+**Uncovered areas:**
+- 尚未做浏览器驱动的真实 Albums / Tokens / Trash / Dashboard / Settings 交互验证。
+- 当前验证主要覆盖编译与 dev server 启动，未覆盖这些页面与后端真实数据交互的端到端流程。
+
+---
