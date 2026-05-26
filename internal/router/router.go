@@ -1,6 +1,9 @@
 package router
 
 import (
+	"net/http"
+	"strings"
+
 	"cloudalbum/internal/handler"
 	"cloudalbum/internal/middleware"
 	"cloudalbum/internal/service"
@@ -8,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Setup(r *gin.Engine, authSvc *service.AuthService, tokenSvc *service.TokenService, authHandler *handler.AuthHandler, tokenHandler *handler.TokenHandler, imageHandler *handler.ImageHandler, albumHandler *handler.AlbumHandler, publicHandler *handler.PublicHandler) {
+func Setup(r *gin.Engine, webFS http.FileSystem, authSvc *service.AuthService, tokenSvc *service.TokenService, authHandler *handler.AuthHandler, tokenHandler *handler.TokenHandler, imageHandler *handler.ImageHandler, albumHandler *handler.AlbumHandler, publicHandler *handler.PublicHandler) {
 	r.Use(middleware.CORS())
 
 	r.GET("/i/*key", publicHandler.Image)
@@ -45,4 +48,12 @@ func Setup(r *gin.Engine, authSvc *service.AuthService, tokenSvc *service.TokenS
 	tokens.POST("", tokenHandler.Create)
 	tokens.DELETE("/:id", tokenHandler.Delete)
 
+	r.NoRoute(func(c *gin.Context) {
+		path := c.Request.URL.Path
+		if strings.HasPrefix(path, "/api/") || strings.HasPrefix(path, "/i/") || strings.HasPrefix(path, "/t/") {
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
+		c.FileFromFS("index.html", webFS)
+	})
 }

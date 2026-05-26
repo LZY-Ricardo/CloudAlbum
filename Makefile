@@ -2,11 +2,11 @@
 
 dev:
 	cd web && npm run dev &
-	go run cmd/server/main.go
+	go run .
 
 build:
 	cd web && npm run build
-	go build -o bin/cloudalbum cmd/server/main.go
+	go build -o bin/cloudalbum .
 
 run: build
 	./bin/cloudalbum

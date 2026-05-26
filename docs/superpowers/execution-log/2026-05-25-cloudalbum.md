@@ -307,3 +307,19 @@
 - 当前验证主要覆盖编译、启动以及导航接线无回归。
 
 ---
+
+#### Verification — Task 12
+
+**Timestamp:** 2026-05-26 16:20 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Frontend build | `cd web && npm run build` | PASS | Vite build completed successfully; only bundle-size warnings were reported. |
+| Embedded Go build | `go build -o bin/cloudalbum .` | PASS | Root package binary built successfully with embedded frontend assets. |
+| Binary startup smoke test | `./bin/cloudalbum` | PASS | Gin route registration completed and the binary started serving successfully. |
+
+**Uncovered areas:**
+- 尚未验证嵌入后的 SPA fallback 实际返回 `index.html`。
+- 尚未通过浏览器请求验证前端静态资源服务与嵌入后的页面加载链路。
+
+---
