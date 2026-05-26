@@ -385,3 +385,66 @@ None.
 None.
 
 ---
+
+### Review Cycle 12 — 2026-05-26 15:24 CST
+
+**Cycle ID:** RC-12
+**Reviewer type:** CODE_QUALITY
+**Reviewer:** self-review with prior reviewer finding recap
+**Scope:** Task 10 Image Management Page
+**Preceded by:** Task 10 code review on commit `60bf909`
+**Re-check of:** Task 10 code review on commit `60bf909`
+**Original reviewer:** review-only subagent
+**Re-check reviewer:** implementer with explicit checklist against prior findings
+
+#### Findings
+
+| # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
+|---|----------|-------------|------------|-----------------|--------|-------------|
+| 1 | IMPORTANT | Batch delete lacked confirmation and could trigger destructive actions too easily. | FIXED | VERIFIED_FIXED | pending | Also affects Task 11 |
+| 2 | IMPORTANT | Batch move UI lacked a way to clear album assignment even though backend supports `album_id = null`. | FIXED | VERIFIED_FIXED | pending | Also affects Task 11 |
+| 3 | IMPORTANT | Selection state persisted across filter changes, so batch actions could affect currently invisible items. | FIXED | VERIFIED_FIXED | pending | Also affects Task 11 |
+| 4 | MINOR | Pagination is still missing and the page silently caps at the hard-coded backend request size. | DEFERRED | DEFERRED | — | Target Task 11 |
+| 5 | MINOR | Search is still eager per keystroke and has no debounce. | DEFERRED | DEFERRED | — | Target Task 11 |
+| 6 | MINOR | Copy actions still lack explicit success/failure feedback. | DEFERRED | DEFERRED | — | Target Task 11 |
+| 7 | MINOR | Preview accessibility polish (Escape/ARIA/focus handling) remains incomplete. | DEFERRED | DEFERRED | — | Target Task 11 |
+
+#### Re-check Summary
+
+- **Finding #1:** Verified fixed by requiring an explicit confirmation before batch delete proceeds.
+- **Finding #2:** Verified fixed by adding a dedicated “移出相册” option mapped to `album_id: null`.
+- **Finding #3:** Verified fixed by clearing current selection whenever filters change before refetching the visible list.
+- **Finding #4-#7:** Deferred intentionally because they are important polish/scalability improvements but not current correctness breaks for the Task 10 scope.
+- **Verification evidence reviewed:** `cd web && npm run build` PASS, `cd web && npm run dev -- --host 127.0.0.1` startup PASS.
+
+#### Deferred Items
+
+**Finding #4:** Pagination is still missing and the page silently caps at the current request size.
+- **Reason:** The current page is functionally usable for initial management flows; pagination can be added together with broader dashboard/list maturity work.
+- **Impact:** Large libraries may not show all images in a single view.
+- **Prerequisite:** Address during Task 11 or later list/dashboard polish.
+
+**Finding #5:** Search is still eager per keystroke and has no debounce.
+- **Reason:** This is a performance/UX optimization rather than a correctness break at current scale.
+- **Impact:** Extra API chatter while typing in large libraries.
+- **Prerequisite:** Address together with pagination/list interaction polish.
+
+**Finding #6:** Copy actions still lack explicit success/failure feedback.
+- **Reason:** Functional behavior works today; feedback improvements can be grouped with wider polish work.
+- **Impact:** Users may not know whether clipboard copy succeeded.
+- **Prerequisite:** Add shared feedback/toast affordances in later frontend tasks.
+
+**Finding #7:** Preview accessibility polish remains incomplete.
+- **Reason:** Current preview is usable with mouse interaction; keyboard/focus improvements are polishing work.
+- **Impact:** Accessibility remains below ideal for keyboard/screen-reader users.
+- **Prerequisite:** Address with broader dialog/interaction polish in later tasks.
+
+#### Rejected Items
+
+None.
+
+#### Related Debugging
+
+None.
+
+---

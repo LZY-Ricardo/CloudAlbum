@@ -262,3 +262,18 @@
 - 当前验证主要覆盖编译与 dev server 启动，尚未执行与后端真实数据交互的端到端流程。
 
 ---
+
+#### Verification — Task 10 (post-review fixes)
+
+**Timestamp:** 2026-05-26 15:24 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Frontend build | `cd web && npm run build` | PASS | Re-verified after adding delete confirmation, filter-change selection reset, and clear-album batch move support. |
+| Dev server smoke test | `cd web && npm run dev -- --host 127.0.0.1` | PASS | Dev server still started successfully on `http://127.0.0.1:3000/`. |
+
+**Uncovered areas:**
+- 尚未做浏览器驱动的真实图片管理交互验证。
+- 分页、搜索 debounce、复制反馈、预览可访问性已明确延期到 Task 11 处理。
+
+---

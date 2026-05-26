@@ -51,6 +51,7 @@ export default function Images() {
   }
 
   useEffect(() => {
+    setSelected([])
     void fetchImages()
   }, [keyword, albumFilter])
 
@@ -66,6 +67,9 @@ export default function Images() {
 
   const handleBatchDelete = async () => {
     if (selected.length === 0) return
+    if (!window.confirm(`确认删除这 ${selected.length} 张图片吗？你之后仍可在回收站恢复它们。`)) {
+      return
+    }
     setLoading(true)
     setError('')
     try {
@@ -87,7 +91,7 @@ export default function Images() {
       await client.post('/images/batch', {
         ids: selected,
         action: 'move',
-        album_id: Number(moveTarget),
+        album_id: moveTarget === '__none__' ? null : Number(moveTarget),
       })
       clearSelection()
       setMoveTarget('')
@@ -130,6 +134,7 @@ export default function Images() {
           <div className="selection-actions">
             <select value={moveTarget} onChange={(event) => setMoveTarget(event.target.value)}>
               <option value="">移动到相册</option>
+              <option value="__none__">移出相册</option>
               {albums.map((album) => (
                 <option key={album.id} value={album.id}>{album.name}</option>
               ))}
