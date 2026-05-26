@@ -274,3 +274,67 @@ None.
 None.
 
 ---
+
+### Review Cycle 9 — 2026-05-26 14:04 CST
+
+**Cycle ID:** RC-9
+**Reviewer type:** SPEC_COMPLIANCE
+**Reviewer:** subagent
+**Scope:** Task 8 React Setup + Login Page
+**Preceded by:** Task 8 implementation and verification
+
+#### Findings
+
+| # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
+|---|----------|-------------|------------|-----------------|--------|-------------|
+| 1 | IMPORTANT | `web/src/api/client.ts` clears `localStorage` on 401 but does not update Zustand auth state, so if no redirect occurs the app state can still think the user is logged in. | FIXED | OPEN | pending | Also affects Task 9, 10 |
+
+#### Deferred Items
+
+None.
+
+#### Rejected Items
+
+None.
+
+#### Related Debugging
+
+None.
+
+---
+
+### Review Cycle 10 — 2026-05-26 14:07 CST
+
+**Cycle ID:** RC-10
+**Reviewer type:** SPEC_COMPLIANCE
+**Reviewer:** self-review with prior reviewer finding recap
+**Scope:** Task 8 React Setup + Login Page
+**Preceded by:** Review Cycle 9
+**Re-check of:** Review Cycle 9
+**Original reviewer:** subagent
+**Re-check reviewer:** implementer with explicit checklist against prior finding
+
+#### Findings
+
+| # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
+|---|----------|-------------|------------|-----------------|--------|-------------|
+| 1 | IMPORTANT | `web/src/api/client.ts` clears `localStorage` on 401 but does not update Zustand auth state, so if no redirect occurs the app state can still think the user is logged in. | FIXED | VERIFIED_FIXED | pending | Also affects Task 9, 10 |
+
+#### Re-check Summary
+
+- **Finding #1:** Verified fixed by adding a `reset()` action to the auth store and invoking it from the axios 401 response interceptor before any redirect logic.
+- **Verification evidence reviewed:** `cd web && npm run build` PASS, `cd web && npm run dev -- --host 127.0.0.1` startup PASS.
+
+#### Deferred Items
+
+None.
+
+#### Rejected Items
+
+None.
+
+#### Related Debugging
+
+None.
+
+---

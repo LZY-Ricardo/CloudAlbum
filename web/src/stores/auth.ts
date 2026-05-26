@@ -6,6 +6,7 @@ type AuthState = {
   loggedIn: boolean
   login: (username: string, password: string) => Promise<void>
   logout: () => void
+  reset: () => void
   init: () => void
 }
 
@@ -20,6 +21,9 @@ export const useAuthStore = create<AuthState>((set) => ({
   },
   logout() {
     localStorage.removeItem('token')
+    set({ token: null, loggedIn: false })
+  },
+  reset() {
     set({ token: null, loggedIn: false })
   },
   init() {

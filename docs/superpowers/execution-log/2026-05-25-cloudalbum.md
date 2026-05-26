@@ -202,3 +202,18 @@
 - The protected `/` route is still a placeholder shell and will be expanded in subsequent tasks.
 
 ---
+
+#### Verification — Task 8 (post-review fixes)
+
+**Timestamp:** 2026-05-26 14:07 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Frontend build | `cd web && npm run build` | PASS | Re-verified after synchronizing Zustand auth state with axios 401 handling. |
+| Dev server smoke test | `cd web && npm run dev -- --host 127.0.0.1` | PASS | Dev server still started successfully on `http://127.0.0.1:3000/`. |
+
+**Uncovered areas:**
+- No browser-driven login/logout flow was executed yet; verification remains at build and startup level.
+- Protected-route behavior under real 401 server responses is covered by code path review, not a browser integration test yet.
+
+---
