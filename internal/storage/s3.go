@@ -2,6 +2,7 @@ package storage
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
+	awshttp "github.com/aws/aws-sdk-go-v2/aws/transport/http"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
@@ -88,7 +90,11 @@ func (s *S3Storage) Exists(ctx context.Context, key string) (bool, error) {
 		Key:    aws.String(key),
 	})
 	if err != nil {
-		return false, nil
+		var responseErr *awshttp.ResponseError
+		if errors.As(err, &responseErr) && responseErr.HTTPStatusCode() == 404 {
+			return false, nil
+		}
+		return false, fmt.Errorf("s3 head object: %w", err)
 	}
 	return true, nil
 }
