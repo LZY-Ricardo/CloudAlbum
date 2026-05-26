@@ -223,3 +223,54 @@ None.
 None.
 
 ---
+
+### Review Cycle 8 — 2026-05-26 00:07 CST
+
+**Cycle ID:** RC-8
+**Reviewer type:** CODE_QUALITY
+**Reviewer:** self-review with prior reviewer findings recap
+**Scope:** Task 7 Image + Album API + Router
+**Preceded by:** Review Cycle 7
+**Re-check of:** Review Cycle 7
+**Original reviewer:** subagent
+**Re-check reviewer:** implementer with explicit checklist against prior findings
+
+#### Findings
+
+| # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
+|---|----------|-------------|------------|-----------------|--------|-------------|
+| 1 | IMPORTANT | `internal/service/image.go` remote URL upload path has duplicate-content handling and storage-key reuse semantics that need explicit consistency with local upload behavior. | FIXED | VERIFIED_FIXED | pending | Also affects Task 10 |
+| 2 | IMPORTANT | `internal/service/image.go` and `internal/handler/image.go` need to distinguish omitted `album_id` from explicit `null` during image update, otherwise album assignment can be cleared unexpectedly. | FIXED | VERIFIED_FIXED | pending | Also affects Task 10 |
+| 3 | IMPORTANT | `internal/service/album.go` and `internal/handler/album.go` overwrite album fields when `name` or `cover_image_id` are omitted, causing partial updates to clear existing values. | FIXED | VERIFIED_FIXED | pending | Also affects Task 10 |
+| 4 | MINOR | `internal/router/router.go` includes a redundant group-level `RequireScope` on image routes, increasing fragility for future route additions and middleware ordering changes. | FIXED | VERIFIED_FIXED | pending | Also affects Task 10 |
+| 5 | IMPORTANT | The Task 7 behavior changes need minimal regression tests to lock in update semantics and avoid future regressions. | FIXED | VERIFIED_FIXED | pending | Also affects Task 10 |
+| 6 | MINOR | `cmd/server/main.go` still called the old `router.Setup` signature after router cleanup, and `internal/router/router.go` retained dead `_ = imageSvc` / `_ = albumSvc` lines until follow-up cleanup. | FIXED | NEW_FINDING | pending | Also affects Task 10 |
+
+#### Re-check Summary
+
+- **Finding #1:** Verified fixed by keeping duplicate-content handling centralized in `storeProcessedImage()` for both multipart and remote URL uploads.
+- **Finding #2:** Verified fixed by changing image update handling to use raw JSON maps so omitted `album_id` and explicit `null` are distinguishable.
+- **Finding #3:** Verified fixed by changing album update handling to preserve omitted fields instead of clearing them.
+- **Finding #4:** Verified fixed by removing the redundant image group-level `RequireScope` gate.
+- **Finding #5:** Verified fixed by adding regression tests for image/album update semantics in service tests.
+- **Verification evidence reviewed:** `go test ./internal/service ./internal/handler` PASS, `go build ./...` PASS.
+
+#### New Findings During Re-check
+
+**Finding #6:** Router cleanup changed `Setup` signature, but `cmd/server/main.go` and `internal/router/router.go` needed a final cleanup pass to remove the old call/unused placeholders.
+- **Status of prior finding:** prior findings were fixed, but the cleanup introduced a small compile-time follow-up.
+- **Action:** fixed immediately and re-verified with tests and full build.
+
+#### Deferred Items
+
+None.
+
+#### Rejected Items
+
+None.
+
+#### Related Debugging
+
+None.
+
+---

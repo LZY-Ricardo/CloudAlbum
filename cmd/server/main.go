@@ -59,7 +59,7 @@ func main() {
 	}
 
 	r := gin.Default()
-	router.Setup(r, authSvc, tokenSvc, imageSvc, albumSvc, authHandler, tokenHandler, imageHandler, albumHandler, publicHandler)
+	router.Setup(r, authSvc, tokenSvc, authHandler, tokenHandler, imageHandler, albumHandler, publicHandler)
 
 	fmt.Printf("CloudAlbum starting on :%d\n", cfg.Server.Port)
 	fmt.Printf("Database: %s (%s)\n", cfg.Database.Driver, cfg.Database.DSN)

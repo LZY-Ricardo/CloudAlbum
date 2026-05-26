@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"time"
 
 	"cloudalbum/internal/config"
 	imgpkg "cloudalbum/internal/image"
@@ -77,8 +78,10 @@ func (s *ImageService) Upload(userID uint, file *multipart.FileHeader, albumID *
 	return s.storeProcessedImage(userID, file.Filename, data, mimeType, albumID)
 }
 
+var httpClient = &http.Client{Timeout: 30 * time.Second}
+
 func (s *ImageService) UploadFromURL(userID uint, imageURL string, albumID *uint) (*model.Image, error) {
-	resp, err := http.Get(strings.TrimSpace(imageURL))
+	resp, err := httpClient.Get(strings.TrimSpace(imageURL))
 	if err != nil {
 		return nil, fmt.Errorf("fetch url: %w", err)
 	}

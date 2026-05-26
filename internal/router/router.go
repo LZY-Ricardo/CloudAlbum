@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Setup(r *gin.Engine, authSvc *service.AuthService, tokenSvc *service.TokenService, imageSvc *service.ImageService, albumSvc *service.AlbumService, authHandler *handler.AuthHandler, tokenHandler *handler.TokenHandler, imageHandler *handler.ImageHandler, albumHandler *handler.AlbumHandler, publicHandler *handler.PublicHandler) {
+func Setup(r *gin.Engine, authSvc *service.AuthService, tokenSvc *service.TokenService, authHandler *handler.AuthHandler, tokenHandler *handler.TokenHandler, imageHandler *handler.ImageHandler, albumHandler *handler.AlbumHandler, publicHandler *handler.PublicHandler) {
 	r.Use(middleware.CORS())
 
 	r.GET("/i/*key", publicHandler.Image)
@@ -45,6 +45,4 @@ func Setup(r *gin.Engine, authSvc *service.AuthService, tokenSvc *service.TokenS
 	tokens.POST("", tokenHandler.Create)
 	tokens.DELETE("/:id", tokenHandler.Delete)
 
-	_ = imageSvc
-	_ = albumSvc
 }

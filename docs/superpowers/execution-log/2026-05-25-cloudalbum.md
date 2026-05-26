@@ -171,3 +171,18 @@
 - Public thumbnail route behavior beyond storage lookup and headers was not exercised with generated thumbnail files in an integration test.
 
 ---
+
+#### Verification — Task 7 (post-review fixes)
+
+**Timestamp:** 2026-05-26 00:07 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Service + handler tests | `go test ./internal/service ./internal/handler` | PASS | Verified image/album partial-update semantics, duplicate handling paths, and public handler behavior after review-driven fixes. |
+| Build | `go build ./...` | PASS | Full repository build succeeded after router signature cleanup and Task 7 review fixes. |
+
+**Uncovered areas:**
+- No end-to-end multipart upload HTTP integration test was added yet; upload flows remain covered at service level plus startup smoke coverage from the earlier Task 7 verification.
+- Thumbnail serving is still covered at handler level rather than a full generated-thumbnail integration scenario.
+
+---
