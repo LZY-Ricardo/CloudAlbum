@@ -7,7 +7,6 @@ import (
 )
 
 //go:embed web/dist
-//go:embed web/dist/*
 var webDist embed.FS
 
 func WebFS() http.FileSystem {

@@ -54,6 +54,16 @@ func Setup(r *gin.Engine, webFS http.FileSystem, authSvc *service.AuthService, t
 			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
 			return
 		}
+		if hasStaticExtension(path) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "not found"})
+			return
+		}
 		c.FileFromFS("index.html", webFS)
 	})
+}
+
+func hasStaticExtension(path string) bool {
+	lastSlash := strings.LastIndex(path, "/")
+	lastDot := strings.LastIndex(path, ".")
+	return lastDot > lastSlash
 }

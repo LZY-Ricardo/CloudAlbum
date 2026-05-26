@@ -323,3 +323,21 @@
 - 尚未通过浏览器请求验证前端静态资源服务与嵌入后的页面加载链路。
 
 ---
+
+#### Verification — Task 12 (post-fix)
+
+**Timestamp:** 2026-05-26 16:54 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Frontend build | `cd web && npm run build` | PASS | Rebuilt frontend assets after embed/fallback fixes; only bundle-size warnings were reported. |
+| Embedded Go build | `go build -o bin/cloudalbum .` | PASS | Root package binary built successfully with embedded frontend assets. |
+| Binary startup smoke test | `./bin/cloudalbum` | PASS | Gin route registration completed and the binary started serving successfully. |
+| Embedded home page | `GET /` | PASS | Root path returned the embedded SPA entrypoint. |
+| Missing static asset | `GET /missing.js` | PASS | Missing static asset now returns 404 instead of incorrectly falling back to `index.html`. |
+
+**Uncovered areas:**
+- 尚未验证所有真实静态资源路径（如 `/assets/...`）是否都能正确命中嵌入文件系统。
+- 尚未验证浏览器端完整 SPA 跳转链路。
+
+---
