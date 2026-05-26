@@ -1,11 +1,15 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { IconUpload, IconImage, IconHome, IconPoweroff } from '@arco-design/web-react/icon'
+import { IconApps, IconDelete, IconHome, IconImage, IconPoweroff, IconSafe, IconSettings, IconUpload } from '@arco-design/web-react/icon'
 import { useAuthStore } from '../stores/auth'
 
 const navItems = [
   { to: '/', label: '概览', icon: <IconHome /> },
   { to: '/upload', label: '上传中心', icon: <IconUpload /> },
   { to: '/images', label: '图片管理', icon: <IconImage /> },
+  { to: '/albums', label: '相册管理', icon: <IconApps /> },
+  { to: '/tokens', label: 'Token 管理', icon: <IconSafe /> },
+  { to: '/trash', label: '回收站', icon: <IconDelete /> },
+  { to: '/settings', label: '系统设置', icon: <IconSettings /> },
 ]
 
 export default function Layout() {

@@ -448,3 +448,39 @@ None.
 None.
 
 ---
+
+### Review Cycle 13 — 2026-05-26 15:44 CST
+
+**Cycle ID:** RC-13
+**Reviewer type:** SPEC_COMPLIANCE
+**Reviewer:** self-review with prior reviewer finding recap
+**Scope:** Task 11 Album + Dashboard + Token + Trash + Settings
+**Preceded by:** Task 11 spec review on commit `dc7b869`
+**Re-check of:** Task 11 spec review on commit `dc7b869`
+**Original reviewer:** spec-review subagent
+**Re-check reviewer:** implementer with explicit checklist against prior finding
+
+#### Findings
+
+| # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
+|---|----------|-------------|------------|-----------------|--------|-------------|
+| 1 | IMPORTANT | `Layout.tsx` side navigation did not expose Task 11 pages (`/albums`, `/tokens`, `/trash`, `/settings`), so the new routes were technically mounted but not properly integrated into the admin shell. | FIXED | VERIFIED_FIXED | pending | Also affects later frontend tasks |
+
+#### Re-check Summary
+
+- **Finding #1:** Verified fixed by adding albums, tokens, trash, and settings entries to the authenticated sidebar navigation.
+- **Verification evidence reviewed:** `cd web && npm run build` PASS, `cd web && npm run dev -- --host 127.0.0.1` startup PASS.
+
+#### Deferred Items
+
+None.
+
+#### Rejected Items
+
+None.
+
+#### Related Debugging
+
+None.
+
+---

@@ -292,3 +292,18 @@
 - 当前验证主要覆盖编译与 dev server 启动，未覆盖这些页面与后端真实数据交互的端到端流程。
 
 ---
+
+#### Verification — Task 11 (post-review fixes)
+
+**Timestamp:** 2026-05-26 15:44 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Frontend build | `cd web && npm run build` | PASS | Re-verified after wiring Task 11 pages into the sidebar navigation. |
+| Dev server smoke test | `cd web && npm run dev -- --host 127.0.0.1` | PASS | Dev server still started successfully on `http://127.0.0.1:3000/`. |
+
+**Uncovered areas:**
+- 尚未做浏览器驱动的真实 Albums / Tokens / Trash / Dashboard / Settings 交互验证。
+- 当前验证主要覆盖编译、启动以及导航接线无回归。
+
+---
