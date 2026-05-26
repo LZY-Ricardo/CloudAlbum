@@ -109,6 +109,8 @@ func initStorage(cfg *config.Config) (storage.Storage, error) {
 	switch cfg.Storage.Driver {
 	case "local":
 		return storage.NewLocalStorage(cfg.Storage.Local.Path)
+	case "s3":
+		return storage.NewS3Storage(cfg.Storage.S3)
 	default:
 		return nil, fmt.Errorf("unsupported storage driver: %s", cfg.Storage.Driver)
 	}

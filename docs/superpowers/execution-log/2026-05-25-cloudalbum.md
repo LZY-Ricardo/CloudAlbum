@@ -357,3 +357,18 @@
 - Containerized runtime behavior (mounted configs, volume persistence, exposed port mapping) remains unverified in this session.
 
 ---
+
+#### Verification — Task 14
+
+**Timestamp:** 2026-05-26 17:10 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Go build | `go build ./...` | PASS | S3 storage backend compiles cleanly with the existing project and root entrypoint. |
+
+**Uncovered areas:**
+- 尚未做真实 S3 / MinIO 连通性验证。
+- 尚未做运行时对象读写验证（PutObject / GetObject / HeadObject / DeleteObject）。
+- 当前仅验证了静态编译兼容性。
+
+---
