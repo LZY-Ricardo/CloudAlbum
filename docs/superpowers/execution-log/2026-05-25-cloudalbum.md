@@ -186,3 +186,19 @@
 - Thumbnail serving is still covered at handler level rather than a full generated-thumbnail integration scenario.
 
 ---
+
+#### Verification — Task 8
+
+**Timestamp:** 2026-05-26 10:58 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Dependency install | `cd web && npm install` | PASS | Installed React Router, Arco Design, Axios, Zustand, and Vite dependencies successfully. |
+| Frontend build | `cd web && npm run build` | PASS | Production build completed successfully; Vite emitted a bundle-size warning only. |
+| Dev server smoke test | `cd web && npm run dev -- --host 127.0.0.1` | PASS | Dev server started successfully on `http://127.0.0.1:3000/`. |
+
+**Uncovered areas:**
+- No browser-driven login flow verification yet; Task 8 verification is limited to build and startup.
+- The protected `/` route is still a placeholder shell and will be expanded in subsequent tasks.
+
+---
