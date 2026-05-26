@@ -671,3 +671,138 @@ body,
     grid-template-columns: 1fr;
   }
 }
+
+.images-page {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.images-toolbar-panel,
+.selection-bar {
+  padding: 24px 28px;
+}
+
+.images-toolbar-controls,
+.selection-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.image-card {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+}
+
+.image-card.is-selected {
+  border-color: rgba(6, 182, 212, 0.55) !important;
+  box-shadow: 0 0 0 1px rgba(6, 182, 212, 0.45), var(--shadow-lg);
+}
+
+.selection-toggle {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(10, 10, 15, 0.65);
+  color: white;
+  cursor: pointer;
+}
+
+.selection-toggle.is-selected {
+  background: linear-gradient(135deg, var(--accent-from), var(--accent-to));
+  border-color: transparent;
+}
+
+.image-preview-trigger {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.image-card-cover {
+  width: 100%;
+  aspect-ratio: 1.15 / 1;
+  object-fit: cover;
+  display: block;
+}
+
+.image-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 18px;
+}
+
+.image-card-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.preview-overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(5, 7, 11, 0.72);
+  backdrop-filter: blur(14px);
+  z-index: 50;
+  padding: 24px;
+}
+
+.preview-dialog {
+  position: relative;
+  width: min(980px, 100%);
+  padding: 18px;
+}
+
+.preview-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.06);
+  color: white;
+  cursor: pointer;
+}
+
+.preview-image {
+  width: 100%;
+  max-height: 70vh;
+  object-fit: contain;
+  border-radius: 18px;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.preview-meta {
+  margin-top: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .images-toolbar-panel,
+  .selection-bar {
+    padding: 20px;
+  }
+}

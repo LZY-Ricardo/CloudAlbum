@@ -247,3 +247,18 @@
 - drag enter/leave 闪烁问题已明确延后到 Task 10 处理。
 
 ---
+
+#### Verification — Task 10
+
+**Timestamp:** 2026-05-26 14:21 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Frontend build | `cd web && npm run build` | PASS | Vite build completed successfully; only bundle-size warnings were reported. |
+| Dev server smoke test | `cd web && npm run dev -- --host 127.0.0.1` | PASS | Dev server started successfully on `http://127.0.0.1:3000/`. |
+
+**Uncovered areas:**
+- 尚未做浏览器驱动的真实图片管理交互验证（搜索、筛选、批量移动/删除、预览）。
+- 当前验证主要覆盖编译与 dev server 启动，尚未执行与后端真实数据交互的端到端流程。
+
+---
