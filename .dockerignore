@@ -1,0 +1,9 @@
+bin/
+cloudalbum
+web/node_modules/
+web/dist/
+.git/
+.DS_Store
+.gocache-review/
+data/
+docs/

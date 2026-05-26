@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  cloudalbum:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - cloudalbum-data:/data
+      - ./configs:/app/configs
+    restart: unless-stopped
+
+volumes:
+  cloudalbum-data:

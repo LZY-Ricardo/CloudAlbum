@@ -341,3 +341,19 @@
 - 尚未验证浏览器端完整 SPA 跳转链路。
 
 ---
+
+#### Verification — Task 13
+
+**Timestamp:** 2026-05-26 17:04 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| File set review | `Read Dockerfile / docker-compose.yml / .dockerignore / Makefile` | PASS | Deployment-related files are present and internally consistent. |
+| Build entry alignment | `Read Makefile` | PASS | `Makefile build` now targets the root package binary (`go build -o bin/cloudalbum .`) consistently with the embedded frontend architecture. |
+| Docker CLI validation | `docker compose config` | SKIPPED | Current environment does not provide a `docker` command, so runtime-level container validation could not be executed here. |
+
+**Uncovered areas:**
+- Docker CLI is unavailable in the current environment, so `docker compose config`, image build, and container startup were not exercised.
+- Containerized runtime behavior (mounted configs, volume persistence, exposed port mapping) remains unverified in this session.
+
+---
