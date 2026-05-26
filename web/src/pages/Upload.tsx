@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import client from '../api/client'
 
 type UploadItem = {
@@ -16,11 +16,17 @@ type Album = {
   name: string
 }
 
+type UploadFailure = {
+  filename: string
+  error: string
+}
+
 export default function Upload() {
   const [uploading, setUploading] = useState(false)
   const [progress, setProgress] = useState(0)
   const [error, setError] = useState('')
   const [results, setResults] = useState<UploadItem[]>([])
+  const [failures, setFailures] = useState<UploadFailure[]>([])
   const [urlValue, setUrlValue] = useState('')
   const [albumId, setAlbumId] = useState('')
   const [albums, setAlbums] = useState<Album[]>([])
@@ -28,9 +34,25 @@ export default function Upload() {
   const [dragActive, setDragActive] = useState(false)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
-  useMemo(() => {
+  useEffect(() => {
     client.get('/albums').then((res) => setAlbums(res.data.albums ?? [])).catch(() => {})
   }, [])
+
+  useEffect(() => {
+    const handleWindowPaste = (event: ClipboardEvent) => {
+      const items = Array.from(event.clipboardData?.items ?? [])
+      const images = items
+        .filter((item) => item.type.startsWith('image/'))
+        .map((item) => item.getAsFile())
+        .filter((file): file is File => Boolean(file))
+      if (images.length > 0) {
+        void uploadFiles(images)
+      }
+    }
+
+    window.addEventListener('paste', handleWindowPaste)
+    return () => window.removeEventListener('paste', handleWindowPaste)
+  }, [albumId])
 
   const uploadFiles = async (files: FileList | File[]) => {
     if (!files.length) return
@@ -51,9 +73,22 @@ export default function Upload() {
           }
         },
       })
-      const next = (response.data.results ?? [])
-        .filter((item: UploadItem | { error?: string }) => 'image' in item)
-      setResults((prev) => [...next, ...prev])
+      const nextResults: UploadItem[] = []
+      const nextFailures: UploadFailure[] = []
+      for (const item of response.data.results ?? []) {
+        if ('image' in item) {
+          nextResults.push(item as UploadItem)
+        } else if ('filename' in item && 'error' in item) {
+          nextFailures.push({ filename: String(item.filename), error: String(item.error) })
+        }
+      }
+      setResults((prev) => [...nextResults, ...prev])
+      setFailures((prev) => [...nextFailures, ...prev])
+      if (nextResults.length === 0 && nextFailures.length > 0) {
+        setError(`本次上传全部失败，共 ${nextFailures.length} 个文件。`)
+      } else if (nextFailures.length > 0) {
+        setError(`本次上传有 ${nextFailures.length} 个文件失败，请检查结果区。`)
+      }
     } catch {
       setError('上传失败，请稍后重试。')
     } finally {
@@ -139,6 +174,12 @@ export default function Upload() {
           }}
           onDrop={handleDrop}
           onClick={() => inputRef.current?.click()}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter' || event.key === ' ') {
+              event.preventDefault()
+              inputRef.current?.click()
+            }
+          }}
           role="button"
           tabIndex={0}
         >
@@ -203,29 +244,42 @@ export default function Upload() {
         </div>
 
         <div className="results-list">
-          {results.length === 0 ? (
+          {results.length === 0 && failures.length === 0 ? (
             <div className="empty-state glass-subpanel">
               上传完成后，这里会显示图片信息和不同格式的可复制链接。
             </div>
           ) : (
-            results.map((item) => (
-              <article key={item.image.id} className="result-card glass-subpanel">
-                <div className="result-card-head">
-                  <div>
-                    <div className="result-name">{item.image.original_name}</div>
-                    <div className="result-meta">ID #{item.image.id} · {(item.image.size / 1024).toFixed(1)} KB</div>
+            <>
+              {results.map((item) => (
+                <article key={item.image.id} className="result-card glass-subpanel">
+                  <div className="result-card-head">
+                    <div>
+                      <div className="result-name">{item.image.original_name}</div>
+                      <div className="result-meta">ID #{item.image.id} · {(item.image.size / 1024).toFixed(1)} KB</div>
+                    </div>
+                    <button
+                      type="button"
+                      className="ghost-button"
+                      onClick={() => void navigator.clipboard.writeText(item.urls[linkMode])}
+                    >
+                      复制当前格式
+                    </button>
                   </div>
-                  <button
-                    type="button"
-                    className="ghost-button"
-                    onClick={() => void navigator.clipboard.writeText(item.urls[linkMode])}
-                  >
-                    复制当前格式
-                  </button>
-                </div>
-                <pre className="result-link">{item.urls[linkMode]}</pre>
-              </article>
-            ))
+                  <pre className="result-link">{item.urls[linkMode]}</pre>
+                </article>
+              ))}
+              {failures.map((item, index) => (
+                <article key={`${item.filename}-${index}`} className="result-card glass-subpanel result-card-failure">
+                  <div className="result-card-head">
+                    <div>
+                      <div className="result-name">{item.filename}</div>
+                      <div className="result-meta">上传失败</div>
+                    </div>
+                  </div>
+                  <pre className="result-link">{item.error}</pre>
+                </article>
+              ))}
+            </>
           )}
         </div>
       </section>

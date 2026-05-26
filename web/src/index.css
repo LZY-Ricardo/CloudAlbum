@@ -599,6 +599,10 @@ body,
   padding: 18px;
 }
 
+.result-card-failure {
+  border-color: rgba(239, 68, 68, 0.28) !important;
+}
+
 .result-card-head {
   display: flex;
   justify-content: space-between;

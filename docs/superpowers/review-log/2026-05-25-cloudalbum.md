@@ -338,3 +338,50 @@ None.
 None.
 
 ---
+
+### Review Cycle 11 — 2026-05-26 14:18 CST
+
+**Cycle ID:** RC-11
+**Reviewer type:** CODE_QUALITY
+**Reviewer:** self-review with prior reviewer finding recap
+**Scope:** Task 9 Layout + Upload Page
+**Preceded by:** Task 9 code review (external reviewer report)
+**Re-check of:** Task 9 code review on commit `b886988`
+**Original reviewer:** review-only subagent
+**Re-check reviewer:** implementer with explicit checklist against prior findings
+
+#### Findings
+
+| # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
+|---|----------|-------------|------------|-----------------|--------|-------------|
+| 1 | IMPORTANT | `Upload.tsx` used `useMemo` to fetch album data, which is an invalid side-effect hook pattern. | FIXED | VERIFIED_FIXED | pending | Also affects Task 10 |
+| 2 | IMPORTANT | Multi-file upload silently dropped per-file backend failures and could make partial or total failure look like success. | FIXED | VERIFIED_FIXED | pending | Also affects Task 10 |
+| 3 | IMPORTANT | Clipboard paste support was advertised in UI copy but only worked when paste reached a focused inner element. | FIXED | VERIFIED_FIXED | pending | Also affects Task 10 |
+| 4 | IMPORTANT | Dropzone exposed `role="button"`/`tabIndex` without keyboard activation support. | FIXED | VERIFIED_FIXED | pending | Also affects Task 10 |
+| 5 | MINOR | Drag enter/leave state can still flicker when moving across child nodes inside the dropzone. | DEFERRED | DEFERRED | — | Target Task 10 |
+
+#### Re-check Summary
+
+- **Finding #1:** Verified fixed by replacing `useMemo` with `useEffect` for album fetching.
+- **Finding #2:** Verified fixed by preserving and rendering per-file failure items from the backend `results` array.
+- **Finding #3:** Verified fixed by adding a page-level `paste` listener via `useEffect`.
+- **Finding #4:** Verified fixed by adding keyboard activation for Enter/Space on the dropzone.
+- **Finding #5:** Deferred intentionally because it is a UX polish issue rather than a current correctness break, and Task 10 will revisit upload-area interactions while expanding the image-management surface.
+- **Verification evidence reviewed:** `cd web && npm run build` PASS, `cd web && npm run dev -- --host 127.0.0.1` startup PASS.
+
+#### Deferred Items
+
+**Finding #5:** Drag enter/leave state can still flicker when moving across child nodes inside the dropzone.
+- **Reason:** Current upload behavior is functional; this is interaction polish rather than a blocking correctness issue.
+- **Impact:** Hover highlight may flicker while dragging across nested content, but upload itself still works.
+- **Prerequisite:** Address together with Task 10 upload/image-management interaction polish to avoid churn.
+
+#### Rejected Items
+
+None.
+
+#### Related Debugging
+
+None.
+
+---

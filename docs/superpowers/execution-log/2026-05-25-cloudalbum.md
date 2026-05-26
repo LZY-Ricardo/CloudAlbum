@@ -232,3 +232,18 @@
 - 当前验证主要覆盖编译与 dev server 启动，未覆盖登录后到上传结果展示的完整交互链路。
 
 ---
+
+#### Verification — Task 9 (post-review fixes)
+
+**Timestamp:** 2026-05-26 14:18 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Frontend build | `cd web && npm run build` | PASS | Re-verified after fixing album fetch side effects, failure surfacing, page-level paste handling, and keyboard activation. |
+| Dev server smoke test | `cd web && npm run dev -- --host 127.0.0.1` | PASS | Dev server still started successfully on `http://127.0.0.1:3000/`. |
+
+**Uncovered areas:**
+- 尚未做浏览器驱动的真实上传链路验证。
+- drag enter/leave 闪烁问题已明确延后到 Task 10 处理。
+
+---
