@@ -35,7 +35,9 @@ Debug → documenting-debugging → re-verify → re-record
     ↓
 Code review → documenting-review
     ↓ (if issues)
-Fix → re-review → update review log
+Fix → verification → prefer same reviewer re-check
+    ↓
+Fallback to fresh reviewer if needed → update review log
     ↓
 Next task
 ```

@@ -37,10 +37,11 @@ debugging-log/2026-05-22-token-expiry-race.md
 1. **No code before brainstorming.** Design must be approved before implementation.
 2. **No completion claims without evidence.** Run verification, record results, then claim done.
 3. **Every review finding has a resolution.** FIXED, DEFERRED (with reason + prerequisite), or REJECTED (with evidence). Never silently drop.
-4. **No merge before completion summary.** Completion summary is the final gate.
-5. **Documentation is append-only.** Never edit past entries in execution-log, review-log, or debugging-log.
-6. **Commit documentation.** Do not leave documentation updates uncommitted at session end.
-7. **Documentation is mandatory** when using this workflow. Ad-hoc changes under 30 minutes are exempt.
+4. **Fixes must be re-verified before re-review.** Prefer the original reviewer for re-check; use a fresh reviewer only if the original reviewer is unavailable or still lacks context.
+5. **No merge before completion summary.** Completion summary is the final gate.
+6. **Documentation is append-only.** Never edit past entries in execution-log, review-log, or debugging-log.
+7. **Commit documentation.** Do not leave documentation updates uncommitted at session end.
+8. **Documentation is mandatory** when using this workflow. Ad-hoc changes under 30 minutes are exempt.
 
 ## Document Cross-References
 
