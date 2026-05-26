@@ -18,7 +18,7 @@ RUN apk add --no-cache ca-certificates
 WORKDIR /app
 COPY --from=backend /cloudalbum ./cloudalbum
 COPY configs ./configs
-RUN mkdir -p /data/images
+RUN mkdir -p /app/data/images
 EXPOSE 8080
-VOLUME ["/data"]
+VOLUME ["/app/data"]
 CMD ["./cloudalbum"]

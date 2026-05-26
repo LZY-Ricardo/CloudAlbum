@@ -484,3 +484,39 @@ None.
 None.
 
 ---
+
+### Review Cycle 14 — 2026-05-26 17:07 CST
+
+**Cycle ID:** RC-14
+**Reviewer type:** SPEC_COMPLIANCE
+**Reviewer:** self-review with prior reviewer finding recap
+**Scope:** Task 13 Docker + Deployment
+**Preceded by:** Task 13 spec review on commit `7aebca2`
+**Re-check of:** Task 13 spec review on commit `7aebca2`
+**Original reviewer:** spec-review subagent
+**Re-check reviewer:** implementer with explicit checklist against prior finding
+
+#### Findings
+
+| # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
+|---|----------|-------------|------------|-----------------|--------|-------------|
+| 1 | IMPORTANT | `docker-compose.yml` and `Dockerfile` used `/data` while the app’s runtime config resolves local data under `/app/data`, so the declared persistence volume would not actually persist the database and image files used by the app. | FIXED | VERIFIED_FIXED | pending | Also affects deployment and operations |
+
+#### Re-check Summary
+
+- **Finding #1:** Verified fixed by aligning the compose volume mount, image data directory creation, and `VOLUME` declaration to `/app/data`, which matches the application’s configured `./data/...` runtime paths.
+- **Verification evidence reviewed:** path-consistency check across `configs/config.yaml`, `docker-compose.yml`, and `Dockerfile`; Docker CLI remained unavailable in this environment.
+
+#### Deferred Items
+
+None.
+
+#### Rejected Items
+
+None.
+
+#### Related Debugging
+
+None.
+
+---
