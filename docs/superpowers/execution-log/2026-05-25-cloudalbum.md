@@ -217,3 +217,18 @@
 - Protected-route behavior under real 401 server responses is covered by code path review, not a browser integration test yet.
 
 ---
+
+#### Verification — Task 9
+
+**Timestamp:** 2026-05-26 14:13 CST
+
+| Check | Command | Result | Notes |
+|-------|---------|--------|-------|
+| Frontend build | `cd web && npm run build` | PASS | Vite build completed successfully; only bundle-size warnings were reported. |
+| Dev server smoke test | `cd web && npm run dev -- --host 127.0.0.1` | PASS | Dev server started successfully on `http://127.0.0.1:3000/`. |
+
+**Uncovered areas:**
+- 尚未做浏览器驱动的真实上传交互验证（点击选择、多文件、拖拽、粘贴、远程 URL 上传）。
+- 当前验证主要覆盖编译与 dev server 启动，未覆盖登录后到上传结果展示的完整交互链路。
+
+---
