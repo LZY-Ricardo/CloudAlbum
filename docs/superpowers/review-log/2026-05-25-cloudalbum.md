@@ -500,7 +500,7 @@ None.
 
 | # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
 |---|----------|-------------|------------|-----------------|--------|-------------|
-| 1 | IMPORTANT | `docker-compose.yml` and `Dockerfile` used `/data` while the app’s runtime config resolves local data under `/app/data`, so the declared persistence volume would not actually persist the database and image files used by the app. | FIXED | VERIFIED_FIXED | pending | Also affects deployment and operations |
+| 1 | IMPORTANT | `docker-compose.yml` and `Dockerfile` used `/data` while the app’s runtime config resolves local data under `/app/data`, so the declared persistence volume would not actually persist the database and image files used by the app. | FIXED | VERIFIED_FIXED | 38283be | Also affects deployment and operations |
 
 #### Re-check Summary
 
@@ -536,7 +536,7 @@ None.
 
 | # | Severity | Description | Resolution | Re-check status | Commit | Cross-task? |
 |---|----------|-------------|------------|-----------------|--------|-------------|
-| 1 | IMPORTANT | `internal/storage/s3.go` `Exists()` treated every `HeadObject` error as `(false, nil)`, collapsing auth/network/server errors into a false “not found” result and violating existing `Storage` semantics. | FIXED | VERIFIED_FIXED | pending | Also affects any future S3-backed runtime paths |
+| 1 | IMPORTANT | `internal/storage/s3.go` `Exists()` treated every `HeadObject` error as `(false, nil)`, collapsing auth/network/server errors into a false “not found” result and violating existing `Storage` semantics. | FIXED | VERIFIED_FIXED | 2694f1c | Also affects any future S3-backed runtime paths |
 
 #### Re-check Summary
 
