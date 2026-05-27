@@ -62,19 +62,21 @@ func main() {
 	processor := imgpkg.NewProcessor(provider)
 	imageSvc := service.NewImageService(imageRepo, store, processor, provider)
 	albumSvc := service.NewAlbumService(albumRepo, imageRepo)
+	settingsSvc := service.NewSettingsService(settingsRepo, provider)
 
-	authHandler := handler.NewAuthHandler(authSvc)
+	authHandler := handler.NewAuthHandler(authSvc, userRepo)
 	tokenHandler := handler.NewTokenHandler(tokenSvc)
 	imageHandler := handler.NewImageHandler(imageSvc)
 	albumHandler := handler.NewAlbumHandler(albumSvc)
 	publicHandler := handler.NewPublicHandler(store, processor)
+	settingsHandler := handler.NewSettingsHandler(settingsSvc)
 
 	if err := authSvc.EnsureAdmin("admin", "admin123"); err != nil {
 		log.Fatalf("Failed to ensure admin user: %v", err)
 	}
 
 	r := gin.Default()
-	router.Setup(r, WebFS(), authSvc, tokenSvc, authHandler, tokenHandler, imageHandler, albumHandler, publicHandler)
+	router.Setup(r, WebFS(), authSvc, tokenSvc, authHandler, tokenHandler, imageHandler, albumHandler, publicHandler, settingsHandler)
 
 	fmt.Printf("CloudAlbum starting on :%d\n", cfg.Server.Port)
 	fmt.Printf("Database: %s (%s)\n", cfg.Database.Driver, cfg.Database.DSN)

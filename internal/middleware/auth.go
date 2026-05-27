@@ -39,6 +39,12 @@ func AuthMiddleware(authSvc *service.AuthService, tokenSvc *service.TokenService
 			return
 		}
 
+		user, err := authSvc.LookupUser(claims.UserID)
+		if err != nil || user.TokenVersion != claims.TokenVersion {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "invalid token"})
+			return
+		}
+
 		c.Set("user_id", claims.UserID)
 		c.Set("auth_type", "jwt")
 		c.Set("username", claims.Username)

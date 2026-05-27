@@ -15,7 +15,14 @@ import (
 	"gorm.io/gorm"
 )
 
-var ErrInvalidCredentials = errors.New("invalid credentials")
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrPasswordTooShort   = errors.New("password too short")
+	ErrPasswordSameAsOld  = errors.New("password same as old")
+	ErrAPITokenForbidden  = errors.New("api token forbidden")
+)
+
+const minPasswordLen = 8
 
 type AuthService struct {
 	userRepo  *repository.UserRepository
@@ -32,8 +39,9 @@ func (s *AuthService) authCfg() config.AuthConfig {
 }
 
 type Claims struct {
-	UserID   uint   `json:"user_id"`
-	Username string `json:"username"`
+	UserID       uint   `json:"user_id"`
+	Username     string `json:"username"`
+	TokenVersion uint   `json:"tv"`
 	jwt.RegisteredClaims
 }
 
@@ -41,8 +49,9 @@ func (s *AuthService) GenerateJWT(user *model.User) (string, error) {
 	cfg := s.authCfg()
 	now := time.Now()
 	claims := Claims{
-		UserID:   user.ID,
-		Username: user.Username,
+		UserID:       user.ID,
+		Username:     user.Username,
+		TokenVersion: user.TokenVersion,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   fmt.Sprintf("%d", user.ID),
 			IssuedAt:  jwt.NewNumericDate(now),
@@ -110,6 +119,54 @@ func (s *AuthService) Register(username, password string) (*model.User, error) {
 	}
 
 	return user, nil
+}
+
+// LookupUser exposes UserRepository.FindByID for middleware token_version 校验。
+func (s *AuthService) LookupUser(id uint) (*model.User, error) {
+	return s.userRepo.FindByID(id)
+}
+
+// ChangePassword 校验旧密码并更新 hash；事务内 bump TokenVersion 并写 PasswordChangedAt。
+// 返回新签发的 JWT（避免改密用户被自己吊销）和变更时间。
+func (s *AuthService) ChangePassword(userID uint, oldPassword, newPassword string) (string, time.Time, error) {
+	if len(newPassword) < minPasswordLen {
+		return "", time.Time{}, ErrPasswordTooShort
+	}
+	if newPassword == oldPassword {
+		return "", time.Time{}, ErrPasswordSameAsOld
+	}
+
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", time.Time{}, ErrInvalidCredentials
+		}
+		return "", time.Time{}, err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(oldPassword)); err != nil {
+		return "", time.Time{}, ErrInvalidCredentials
+	}
+
+	newHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	changedAt := time.Now()
+	if err := s.userRepo.UpdatePasswordAndBumpVersion(userID, string(newHash), changedAt); err != nil {
+		return "", time.Time{}, err
+	}
+
+	reloaded, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	token, err := s.GenerateJWT(reloaded)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return token, changedAt, nil
 }
 
 func (s *AuthService) EnsureAdmin(username, password string) error {
