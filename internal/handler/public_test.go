@@ -36,7 +36,7 @@ func TestPublicHandlerImageServesStoredFileWithHeaders(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	rec := httptest.NewRecorder()
 	ctx, engine := gin.CreateTestContext(rec)
-	h := NewPublicHandler(&stubPublicStorage{files: map[string]string{"demo/test.jpg": "image-bytes"}}, imgpkg.NewProcessor(testPublicImageConfig()))
+	h := NewPublicHandler(&stubPublicStorage{files: map[string]string{"demo/test.jpg": "image-bytes"}}, imgpkg.NewProcessor(testPublicProvider()))
 	engine.GET("/i/*key", h.Image)
 
 	req := httptest.NewRequest(http.MethodGet, "/i/demo/test.jpg", nil)
@@ -61,7 +61,7 @@ func TestPublicHandlerImageReturnsNotFoundWhenMissing(t *testing.T) {
 	gin.SetMode(gin.TestMode)
 	rec := httptest.NewRecorder()
 	_, engine := gin.CreateTestContext(rec)
-	h := NewPublicHandler(&stubPublicStorage{files: map[string]string{}}, imgpkg.NewProcessor(testPublicImageConfig()))
+	h := NewPublicHandler(&stubPublicStorage{files: map[string]string{}}, imgpkg.NewProcessor(testPublicProvider()))
 	engine.GET("/i/*key", h.Image)
 
 	req := httptest.NewRequest(http.MethodGet, "/i/missing/test.jpg", nil)
@@ -74,4 +74,9 @@ func TestPublicHandlerImageReturnsNotFoundWhenMissing(t *testing.T) {
 
 func testPublicImageConfig() config.ImageConfig {
 	return config.ImageConfig{AutoConvert: "jpeg", Quality: 85}
+}
+
+func testPublicProvider() *config.Provider {
+	base := config.Config{Image: testPublicImageConfig()}
+	return config.NewProvider(base, config.Overrides{})
 }

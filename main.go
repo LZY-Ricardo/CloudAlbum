@@ -41,11 +41,26 @@ func main() {
 	imageRepo := repository.NewImageRepository(db)
 	albumRepo := repository.NewAlbumRepository(db)
 	tokenRepo := repository.NewTokenRepository(db)
+	settingsRepo := repository.NewSettingsRepository(db)
 
-	authSvc := service.NewAuthService(userRepo, tokenRepo, cfg.Auth)
+	overrides, err := settingsRepo.LoadOrBootstrap()
+	if err != nil {
+		log.Printf("[config] WARNING: settings load failed, falling back to empty overrides: %v", err)
+		overrides = config.Overrides{}
+	}
+	provider := config.NewProvider(*cfg, overrides)
+
+	if info, statErr := os.Stat("configs/config.yaml"); statErr == nil {
+		if updated, uErr := settingsRepo.UpdatedAt(); uErr == nil && info.ModTime().After(updated) {
+			log.Printf("[config] yaml file is newer than settings table (yaml=%s settings=%s); runtime still uses values from settings DB. To re-seed from YAML, delete the row in settings table and restart.",
+				info.ModTime().Format("2006-01-02T15:04:05Z07:00"),
+				updated.Format("2006-01-02T15:04:05Z07:00"))
+		}
+	}
+	authSvc := service.NewAuthService(userRepo, tokenRepo, provider)
 	tokenSvc := service.NewTokenService(tokenRepo)
-	processor := imgpkg.NewProcessor(cfg.Image)
-	imageSvc := service.NewImageService(imageRepo, store, processor, cfg.Image, cfg.Server.BaseURL)
+	processor := imgpkg.NewProcessor(provider)
+	imageSvc := service.NewImageService(imageRepo, store, processor, provider)
 	albumSvc := service.NewAlbumService(albumRepo, imageRepo)
 
 	authHandler := handler.NewAuthHandler(authSvc)
@@ -98,7 +113,7 @@ func initDB(cfg *config.Config) (*gorm.DB, error) {
 		return nil, fmt.Errorf("open database: %w", err)
 	}
 
-	if err := db.AutoMigrate(&model.User{}, &model.Image{}, &model.Album{}, &model.APIToken{}); err != nil {
+	if err := db.AutoMigrate(&model.User{}, &model.Image{}, &model.Album{}, &model.APIToken{}, &model.Settings{}); err != nil {
 		return nil, fmt.Errorf("auto migrate: %w", err)
 	}
 

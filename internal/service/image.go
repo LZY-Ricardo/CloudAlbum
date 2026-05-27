@@ -29,25 +29,31 @@ type ImageService struct {
 	imageRepo *repository.ImageRepository
 	store     storage.Storage
 	processor *imgpkg.Processor
-	cfg       config.ImageConfig
-	baseURL   string
+	provider  *config.Provider
 }
 
-func NewImageService(imageRepo *repository.ImageRepository, store storage.Storage, processor *imgpkg.Processor, cfg config.ImageConfig, baseURL string) *ImageService {
+func NewImageService(imageRepo *repository.ImageRepository, store storage.Storage, processor *imgpkg.Processor, provider *config.Provider) *ImageService {
 	return &ImageService{
 		imageRepo: imageRepo,
 		store:     store,
 		processor: processor,
-		cfg:       cfg,
-		baseURL:   strings.TrimRight(baseURL, "/"),
+		provider:  provider,
 	}
+}
+
+func (s *ImageService) imageCfg() config.ImageConfig {
+	return s.provider.Get().Image
+}
+
+func (s *ImageService) baseURL() string {
+	return strings.TrimRight(s.provider.Get().Server.BaseURL, "/")
 }
 
 func (s *ImageService) Upload(userID uint, file *multipart.FileHeader, albumID *uint) (*model.Image, error) {
 	if file == nil {
 		return nil, errors.New("file required")
 	}
-	if file.Size > s.cfg.MaxSize {
+	if file.Size > s.imageCfg().MaxSize {
 		return nil, fmt.Errorf("file too large")
 	}
 
@@ -91,12 +97,13 @@ func (s *ImageService) UploadFromURL(userID uint, imageURL string, albumID *uint
 		return nil, fmt.Errorf("fetch url: unexpected status %d", resp.StatusCode)
 	}
 
-	limited := io.LimitReader(resp.Body, s.cfg.MaxSize+1)
+	maxSize := s.imageCfg().MaxSize
+	limited := io.LimitReader(resp.Body, maxSize+1)
 	data, err := io.ReadAll(limited)
 	if err != nil {
 		return nil, fmt.Errorf("read remote image: %w", err)
 	}
-	if int64(len(data)) > s.cfg.MaxSize {
+	if int64(len(data)) > maxSize {
 		return nil, fmt.Errorf("file too large")
 	}
 
@@ -234,7 +241,7 @@ func (s *ImageService) Stats(userID uint) (count int64, totalSize int64, err err
 }
 
 func (s *ImageService) URLs(img *model.Image) map[string]string {
-	url := s.baseURL + "/i/" + strings.TrimLeft(img.StorageKey, "/")
+	url := s.baseURL() + "/i/" + strings.TrimLeft(img.StorageKey, "/")
 	return map[string]string{
 		"url":      url,
 		"markdown": fmt.Sprintf("![%s](%s)", img.OriginalName, url),
@@ -245,7 +252,7 @@ func (s *ImageService) URLs(img *model.Image) map[string]string {
 
 func (s *ImageService) isAllowedType(ext string) bool {
 	normalized := strings.TrimPrefix(strings.ToLower(strings.TrimSpace(ext)), ".")
-	for _, allowed := range s.cfg.AllowedTypes {
+	for _, allowed := range s.imageCfg().AllowedTypes {
 		if normalized == strings.TrimPrefix(strings.ToLower(strings.TrimSpace(allowed)), ".") {
 			return true
 		}

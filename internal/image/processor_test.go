@@ -41,16 +41,16 @@ func TestProcessUsesDeterministicJPEGThumbnailsAndAppliesQuality(t *testing.T) {
 	data := createPNGTestImage(t)
 	thumbnails := []config.ThumbnailSize{{Name: "thumb", Width: 128, Height: 128}}
 
-	highQuality := NewProcessor(config.ImageConfig{
+	highQuality := NewProcessor(newProcessorTestProvider(config.ImageConfig{
 		AutoConvert: "webp",
 		Quality:     95,
 		Thumbnails:  thumbnails,
-	})
-	lowQuality := NewProcessor(config.ImageConfig{
+	}))
+	lowQuality := NewProcessor(newProcessorTestProvider(config.ImageConfig{
 		AutoConvert: "webp",
 		Quality:     25,
 		Thumbnails:  thumbnails,
-	})
+	}))
 
 	highResult, err := highQuality.Process(data, "image/png")
 	if err != nil {
@@ -102,4 +102,9 @@ func min(a, b int) int {
 		return a
 	}
 	return b
+}
+
+func newProcessorTestProvider(img config.ImageConfig) *config.Provider {
+	base := config.Config{Image: img}
+	return config.NewProvider(base, config.Overrides{})
 }

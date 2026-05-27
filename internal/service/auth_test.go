@@ -18,10 +18,7 @@ func TestAuthServiceLoginAndParseJWT(t *testing.T) {
 	db := newTestAuthServiceDB(t)
 	userRepo := repository.NewUserRepository(db)
 	tokenRepo := repository.NewTokenRepository(db)
-	authSvc := NewAuthService(userRepo, tokenRepo, config.AuthConfig{
-		JWTSecret:   "test-secret",
-		TokenExpire: time.Hour,
-	})
+	authSvc := NewAuthService(userRepo, tokenRepo, newTestAuthProvider())
 
 	token, err := authSvc.Login("auth-user", "password123")
 	if err != nil {
@@ -44,10 +41,7 @@ func TestAuthServiceLoginInvalidCredentials(t *testing.T) {
 	db := newTestAuthServiceDB(t)
 	userRepo := repository.NewUserRepository(db)
 	tokenRepo := repository.NewTokenRepository(db)
-	authSvc := NewAuthService(userRepo, tokenRepo, config.AuthConfig{
-		JWTSecret:   "test-secret",
-		TokenExpire: time.Hour,
-	})
+	authSvc := NewAuthService(userRepo, tokenRepo, newTestAuthProvider())
 
 	_, err := authSvc.Login("auth-user", "wrong-password")
 	if !errors.Is(err, ErrInvalidCredentials) {
@@ -63,10 +57,7 @@ func TestAuthServiceLoginCorruptHashReturnsBackendError(t *testing.T) {
 
 	userRepo := repository.NewUserRepository(db)
 	tokenRepo := repository.NewTokenRepository(db)
-	authSvc := NewAuthService(userRepo, tokenRepo, config.AuthConfig{
-		JWTSecret:   "test-secret",
-		TokenExpire: time.Hour,
-	})
+	authSvc := NewAuthService(userRepo, tokenRepo, newTestAuthProvider())
 
 	_, err := authSvc.Login("auth-user", "password123")
 	if err == nil {
@@ -75,6 +66,11 @@ func TestAuthServiceLoginCorruptHashReturnsBackendError(t *testing.T) {
 	if errors.Is(err, ErrInvalidCredentials) {
 		t.Fatalf("Login() error = %v, should not be classified as invalid credentials", err)
 	}
+}
+
+func newTestAuthProvider() *config.Provider {
+	base := config.Config{Auth: config.AuthConfig{JWTSecret: "test-secret", TokenExpire: time.Hour}}
+	return config.NewProvider(base, config.Overrides{})
 }
 
 func newTestAuthServiceDB(t *testing.T) *gorm.DB {

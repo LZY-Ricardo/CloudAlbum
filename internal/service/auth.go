@@ -20,11 +20,15 @@ var ErrInvalidCredentials = errors.New("invalid credentials")
 type AuthService struct {
 	userRepo  *repository.UserRepository
 	tokenRepo *repository.TokenRepository
-	cfg       config.AuthConfig
+	provider  *config.Provider
 }
 
-func NewAuthService(userRepo *repository.UserRepository, tokenRepo *repository.TokenRepository, cfg config.AuthConfig) *AuthService {
-	return &AuthService{userRepo: userRepo, tokenRepo: tokenRepo, cfg: cfg}
+func NewAuthService(userRepo *repository.UserRepository, tokenRepo *repository.TokenRepository, provider *config.Provider) *AuthService {
+	return &AuthService{userRepo: userRepo, tokenRepo: tokenRepo, provider: provider}
+}
+
+func (s *AuthService) authCfg() config.AuthConfig {
+	return s.provider.Get().Auth
 }
 
 type Claims struct {
@@ -34,6 +38,7 @@ type Claims struct {
 }
 
 func (s *AuthService) GenerateJWT(user *model.User) (string, error) {
+	cfg := s.authCfg()
 	now := time.Now()
 	claims := Claims{
 		UserID:   user.ID,
@@ -41,20 +46,21 @@ func (s *AuthService) GenerateJWT(user *model.User) (string, error) {
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   fmt.Sprintf("%d", user.ID),
 			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(s.cfg.TokenExpire)),
+			ExpiresAt: jwt.NewNumericDate(now.Add(cfg.TokenExpire)),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(s.cfg.JWTSecret))
+	return token.SignedString([]byte(cfg.JWTSecret))
 }
 
 func (s *AuthService) ParseJWT(tokenStr string) (*Claims, error) {
+	cfg := s.authCfg()
 	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if token.Method != jwt.SigningMethodHS256 {
 			return nil, fmt.Errorf("unexpected signing method: %s", token.Method.Alg())
 		}
-		return []byte(s.cfg.JWTSecret), nil
+		return []byte(cfg.JWTSecret), nil
 	})
 	if err != nil {
 		return nil, err
