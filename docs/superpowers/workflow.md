@@ -11,7 +11,7 @@ Phase 3: writing-plans              → plans/
     ↓
 Phase 4: execution (per task loop)
     ├── documenting-execution       → execution-log/
-    ├── documenting-verification    → execution-log/ (appended)
+    ├── documenting-verification    → execution-log/ (preferred) or verification-log/ (fallback)
     ├── documenting-debugging       → debugging-log/ (if bugs found)
     └── documenting-review          → review-log/
     ↓
@@ -46,10 +46,10 @@ Next task
 
 ### Phase 1: Requirement Decomposition (conditional)
 
-- **When:** Requirement involves 3+ features, is vague, or user asks "how to approach this"
+- **When:** Requirement involves 3+ features, is vague, or the user asks how to approach it
 - **Skill:** `decomposing-requirements`
 - **Output:** `decomposition/YYYY-MM-DD-<topic>.md`
-- **Next:** User picks first sub-project → Phase 2
+- **Next:** User picks the first sub-project → Phase 2
 - **Skip if:** Single, well-scoped feature
 
 ### Phase 2: Brainstorming
@@ -61,7 +61,7 @@ Next task
 
 ### Phase 3: Planning
 
-- **When:** Always, after spec is approved
+- **When:** Always, after the spec is approved
 - **Skill:** `writing-plans` (Superpowers)
 - **Output:** `plans/YYYY-MM-DD-<feature-name>.md`
 - **Next:** Phase 4
@@ -70,12 +70,12 @@ Next task
 
 - **When:** Plan is ready
 - **Skill:** `subagent-driven-development` or `executing-plans` (Superpowers)
-- **Output:** Working code + git commits
+- **Output:** Working changes + git commits
 - **Next:** Phase 5
 
 ### Phase 5: Completion
 
-- **When:** All tasks done, all reviews passed
+- **When:** All tasks are done and all reviews pass
 - **Skill:** `documenting-completion`
 - **Output:** `completion/YYYY-MM-DD-<feature-name>-summary.md`
 - **Next:** Phase 6
@@ -88,12 +88,12 @@ Next task
 
 ## Resuming Mid-Project
 
-When joining a project that already has docs:
-
-1. Check for **completion summary** in `completion/` — if it exists, the feature is done
-2. Check **execution-log** — shows which tasks are done, blocked, or remaining
-3. Check **review-log** — shows deferred items that might need attention
-4. Check **debugging-log** — shows known issues and workarounds
-5. Resume from where the last entry left off
+1. If `docs/superpowers/status.md` exists and is actively maintained, read it first.
+2. This repository currently resumes without `status.md`, so start with the newest relevant file in `completion/`.
+3. Continue with the newest relevant file in `execution-log/`.
+4. If execution evidence for the current work lives in `verification-log/`, read the newest relevant file there before moving on.
+5. Then read the newest relevant file in `review-log/`.
+6. Finally read the newest relevant file in `debugging-log/`.
+7. Resume from the latest unfinished or follow-up-worthy record.
 
 Do NOT restart the workflow from scratch.

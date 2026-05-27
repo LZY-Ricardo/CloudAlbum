@@ -26,5 +26,6 @@ This project uses the Enhanced Superpowers workflow. The following rules are MAN
 
 ### Documentation
 
-- All workflow docs go in `docs/superpowers/` — see `docs/superpowers/README.md` for full details.
+- All workflow docs go in `docs/superpowers/` — see `docs/superpowers/README.md` for navigation and `docs/superpowers/workflow.md` for the required phase order.
+- This repository currently resumes without `docs/superpowers/status.md`, so recovery starts from `completion/`, then `execution-log/`, then `verification-log/` when present for the current work, then `review-log/`, then `debugging-log/`.
 - Documentation is MANDATORY when using this workflow. Ad-hoc changes under 30 minutes are exempt.
