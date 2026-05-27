@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	"cloudalbum/internal/model"
 	"gorm.io/gorm"
 )
@@ -31,4 +33,18 @@ func (r *UserRepository) FindByID(id uint) (*model.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+// UpdatePasswordAndBumpVersion 在一个事务内更新密码 hash、自增 TokenVersion、写入 PasswordChangedAt。
+func (r *UserRepository) UpdatePasswordAndBumpVersion(userID uint, newHash string, changedAt time.Time) error {
+	return r.db.Transaction(func(tx *gorm.DB) error {
+		var u model.User
+		if err := tx.First(&u, userID).Error; err != nil {
+			return err
+		}
+		u.PasswordHash = newHash
+		u.TokenVersion = u.TokenVersion + 1
+		u.PasswordChangedAt = &changedAt
+		return tx.Save(&u).Error
+	})
 }
