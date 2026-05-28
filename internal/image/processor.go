@@ -23,11 +23,15 @@ type ProcessResult struct {
 }
 
 type Processor struct {
-	cfg config.ImageConfig
+	provider *config.Provider
 }
 
-func NewProcessor(cfg config.ImageConfig) *Processor {
-	return &Processor{cfg: cfg}
+func NewProcessor(provider *config.Provider) *Processor {
+	return &Processor{provider: provider}
+}
+
+func (p *Processor) imageCfg() config.ImageConfig {
+	return p.provider.Get().Image
 }
 
 func (p *Processor) Process(data []byte, mimeType string) (*ProcessResult, error) {
@@ -47,10 +51,11 @@ func (p *Processor) Process(data []byte, mimeType string) (*ProcessResult, error
 	hash := sha256.Sum256(data)
 	result.Hash = hex.EncodeToString(hash[:])
 
+	cfg := p.imageCfg()
 	thumbFormat, thumbOptions := p.thumbnailEncoding()
 
 	result.Thumbnails = make(map[string][]byte)
-	for _, size := range p.cfg.Thumbnails {
+	for _, size := range cfg.Thumbnails {
 		thumb := imaging.Thumbnail(img, size.Width, size.Height, imaging.Lanczos)
 		var buf bytes.Buffer
 		if err := imaging.Encode(&buf, thumb, thumbFormat, thumbOptions...); err != nil {
@@ -67,15 +72,16 @@ func (p *Processor) GenerateThumbnailKey(originalKey, sizeName string) string {
 }
 
 func (p *Processor) thumbnailEncoding() (imaging.Format, []imaging.EncodeOption) {
-	switch strings.ToLower(p.cfg.AutoConvert) {
+	cfg := p.imageCfg()
+	switch strings.ToLower(cfg.AutoConvert) {
 	case "", "jpg", "jpeg", "webp":
-		return imaging.JPEG, []imaging.EncodeOption{imaging.JPEGQuality(p.cfg.Quality)}
+		return imaging.JPEG, []imaging.EncodeOption{imaging.JPEGQuality(cfg.Quality)}
 	case "png":
 		return imaging.PNG, nil
 	case "gif":
 		return imaging.GIF, nil
 	default:
-		return imaging.JPEG, []imaging.EncodeOption{imaging.JPEGQuality(p.cfg.Quality)}
+		return imaging.JPEG, []imaging.EncodeOption{imaging.JPEGQuality(cfg.Quality)}
 	}
 }
 

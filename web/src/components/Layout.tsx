@@ -1,6 +1,7 @@
 import { Link, Outlet, useLocation } from 'react-router-dom'
-import { IconApps, IconDelete, IconHome, IconImage, IconPoweroff, IconSafe, IconSettings, IconUpload } from '@arco-design/web-react/icon'
+import { IconApps, IconDelete, IconHome, IconImage, IconPoweroff, IconSafe, IconSettings, IconUpload, IconUser } from '@arco-design/web-react/icon'
 import { useAuthStore } from '../stores/auth'
+import DefaultPasswordBanner from './DefaultPasswordBanner'
 
 const navItems = [
   { to: '/', label: '概览', icon: <IconHome /> },
@@ -9,6 +10,7 @@ const navItems = [
   { to: '/albums', label: '相册管理', icon: <IconApps /> },
   { to: '/tokens', label: 'Token 管理', icon: <IconSafe /> },
   { to: '/trash', label: '回收站', icon: <IconDelete /> },
+  { to: '/account', label: '账户', icon: <IconUser /> },
   { to: '/settings', label: '系统设置', icon: <IconSettings /> },
 ]
 
@@ -73,6 +75,7 @@ export default function Layout() {
         </div>
 
         <div className="dashboard-content">
+          <DefaultPasswordBanner />
           <Outlet />
         </div>
       </main>

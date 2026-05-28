@@ -11,7 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Setup(r *gin.Engine, webFS http.FileSystem, authSvc *service.AuthService, tokenSvc *service.TokenService, authHandler *handler.AuthHandler, tokenHandler *handler.TokenHandler, imageHandler *handler.ImageHandler, albumHandler *handler.AlbumHandler, publicHandler *handler.PublicHandler) {
+func Setup(r *gin.Engine, webFS http.FileSystem, authSvc *service.AuthService, tokenSvc *service.TokenService, authHandler *handler.AuthHandler, tokenHandler *handler.TokenHandler, imageHandler *handler.ImageHandler, albumHandler *handler.AlbumHandler, publicHandler *handler.PublicHandler, settingsHandler *handler.SettingsHandler) {
 	r.Use(middleware.CORS())
 
 	r.GET("/i/*key", publicHandler.Image)
@@ -24,6 +24,7 @@ func Setup(r *gin.Engine, webFS http.FileSystem, authSvc *service.AuthService, t
 	api := r.Group("/api/v1")
 	api.Use(middleware.AuthMiddleware(authSvc, tokenSvc))
 	api.GET("/auth/me", authHandler.Me)
+	api.POST("/auth/change-password", authHandler.ChangePassword)
 
 	images := api.Group("/images")
 	images.POST("", middleware.RequireScope("upload"), imageHandler.Upload)
@@ -47,6 +48,10 @@ func Setup(r *gin.Engine, webFS http.FileSystem, authSvc *service.AuthService, t
 	tokens.GET("", tokenHandler.List)
 	tokens.POST("", tokenHandler.Create)
 	tokens.DELETE("/:id", tokenHandler.Delete)
+
+	settings := api.Group("/settings")
+	settings.GET("", settingsHandler.Get)
+	settings.PUT("", settingsHandler.Update)
 
 	r.NoRoute(func(c *gin.Context) {
 		path := c.Request.URL.Path

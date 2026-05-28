@@ -29,12 +29,12 @@ func TestImageServiceUploadDeduplicatesByHash(t *testing.T) {
 		t.Fatalf("NewLocalStorage() error = %v", err)
 	}
 
+	provider := testProvider()
 	svc := NewImageService(
 		imageRepo,
 		store,
-		imgpkg.NewProcessor(testImageConfig()),
-		testImageConfig(),
-		"http://localhost:8080",
+		imgpkg.NewProcessor(provider),
+		provider,
 	)
 
 	fileA := newTestFileHeader(t, "sample.jpg", testJPEGBytes(t))
@@ -75,7 +75,7 @@ func TestImageServiceUploadDeduplicatesByHash(t *testing.T) {
 		t.Fatalf("expected stored original at %q", createdA.StorageKey)
 	}
 
-	thumbKey := imgpkg.NewProcessor(testImageConfig()).GenerateThumbnailKey(createdA.StorageKey, "thumb")
+	thumbKey := imgpkg.NewProcessor(provider).GenerateThumbnailKey(createdA.StorageKey, "thumb")
 	exists, err = store.Exists(nil, thumbKey)
 	if err != nil {
 		t.Fatalf("Exists() thumbnail error = %v", err)
@@ -93,12 +93,12 @@ func TestImageServiceUploadRejectsDisallowedExtension(t *testing.T) {
 		t.Fatalf("NewLocalStorage() error = %v", err)
 	}
 
+	provider := testProvider()
 	svc := NewImageService(
 		imageRepo,
 		store,
-		imgpkg.NewProcessor(testImageConfig()),
-		testImageConfig(),
-		"http://localhost:8080",
+		imgpkg.NewProcessor(provider),
+		provider,
 	)
 
 	file := newTestFileHeader(t, "bad.txt", testJPEGBytes(t))
@@ -112,7 +112,7 @@ func TestImageServiceUploadRejectsDisallowedExtension(t *testing.T) {
 }
 
 func TestImageServiceURLsBuildExpectedFormats(t *testing.T) {
-	svc := NewImageService(nil, nil, nil, testImageConfig(), "http://localhost:8080")
+	svc := NewImageService(nil, nil, nil, testProvider())
 	img := &model.Image{OriginalName: "hello.jpg", StorageKey: "1/abcd/hello.jpg"}
 
 	urls := svc.URLs(img)
@@ -133,7 +133,7 @@ func TestImageServiceURLsBuildExpectedFormats(t *testing.T) {
 func TestImageServiceUpdatePreservesAlbumWhenAlbumIDOmitted(t *testing.T) {
 	db := newTestImageServiceDB(t)
 	imageRepo := repository.NewImageRepository(db)
-	svc := NewImageService(imageRepo, nil, nil, testImageConfig(), "http://localhost:8080")
+	svc := NewImageService(imageRepo, nil, nil, testProvider())
 
 	albumID := uint(7)
 	img := &model.Image{
@@ -237,6 +237,14 @@ func testImageConfig() config.ImageConfig {
 			{Name: "thumb", Width: 50, Height: 50},
 		},
 	}
+}
+
+func testProvider() *config.Provider {
+	base := config.Config{
+		Server: config.ServerConfig{BaseURL: "http://localhost:8080"},
+		Image:  testImageConfig(),
+	}
+	return config.NewProvider(base, config.Overrides{})
 }
 
 func testJPEGBytes(t *testing.T) []byte {

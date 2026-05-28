@@ -15,46 +15,61 @@ import (
 	"gorm.io/gorm"
 )
 
-var ErrInvalidCredentials = errors.New("invalid credentials")
+var (
+	ErrInvalidCredentials = errors.New("invalid credentials")
+	ErrPasswordTooShort   = errors.New("password too short")
+	ErrPasswordSameAsOld  = errors.New("password same as old")
+	ErrAPITokenForbidden  = errors.New("api token forbidden")
+)
+
+const minPasswordLen = 8
 
 type AuthService struct {
 	userRepo  *repository.UserRepository
 	tokenRepo *repository.TokenRepository
-	cfg       config.AuthConfig
+	provider  *config.Provider
 }
 
-func NewAuthService(userRepo *repository.UserRepository, tokenRepo *repository.TokenRepository, cfg config.AuthConfig) *AuthService {
-	return &AuthService{userRepo: userRepo, tokenRepo: tokenRepo, cfg: cfg}
+func NewAuthService(userRepo *repository.UserRepository, tokenRepo *repository.TokenRepository, provider *config.Provider) *AuthService {
+	return &AuthService{userRepo: userRepo, tokenRepo: tokenRepo, provider: provider}
+}
+
+func (s *AuthService) authCfg() config.AuthConfig {
+	return s.provider.Get().Auth
 }
 
 type Claims struct {
-	UserID   uint   `json:"user_id"`
-	Username string `json:"username"`
+	UserID       uint   `json:"user_id"`
+	Username     string `json:"username"`
+	TokenVersion uint   `json:"tv"`
 	jwt.RegisteredClaims
 }
 
 func (s *AuthService) GenerateJWT(user *model.User) (string, error) {
+	cfg := s.authCfg()
 	now := time.Now()
 	claims := Claims{
-		UserID:   user.ID,
-		Username: user.Username,
+		UserID:       user.ID,
+		Username:     user.Username,
+		TokenVersion: user.TokenVersion,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   fmt.Sprintf("%d", user.ID),
 			IssuedAt:  jwt.NewNumericDate(now),
-			ExpiresAt: jwt.NewNumericDate(now.Add(s.cfg.TokenExpire)),
+			ExpiresAt: jwt.NewNumericDate(now.Add(cfg.TokenExpire)),
 		},
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	return token.SignedString([]byte(s.cfg.JWTSecret))
+	return token.SignedString([]byte(cfg.JWTSecret))
 }
 
 func (s *AuthService) ParseJWT(tokenStr string) (*Claims, error) {
+	cfg := s.authCfg()
 	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
 		if token.Method != jwt.SigningMethodHS256 {
 			return nil, fmt.Errorf("unexpected signing method: %s", token.Method.Alg())
 		}
-		return []byte(s.cfg.JWTSecret), nil
+		return []byte(cfg.JWTSecret), nil
 	})
 	if err != nil {
 		return nil, err
@@ -104,6 +119,54 @@ func (s *AuthService) Register(username, password string) (*model.User, error) {
 	}
 
 	return user, nil
+}
+
+// LookupUser exposes UserRepository.FindByID for middleware token_version 校验。
+func (s *AuthService) LookupUser(id uint) (*model.User, error) {
+	return s.userRepo.FindByID(id)
+}
+
+// ChangePassword 校验旧密码并更新 hash；事务内 bump TokenVersion 并写 PasswordChangedAt。
+// 返回新签发的 JWT（避免改密用户被自己吊销）和变更时间。
+func (s *AuthService) ChangePassword(userID uint, oldPassword, newPassword string) (string, time.Time, error) {
+	if len(newPassword) < minPasswordLen {
+		return "", time.Time{}, ErrPasswordTooShort
+	}
+	if newPassword == oldPassword {
+		return "", time.Time{}, ErrPasswordSameAsOld
+	}
+
+	user, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return "", time.Time{}, ErrInvalidCredentials
+		}
+		return "", time.Time{}, err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(oldPassword)); err != nil {
+		return "", time.Time{}, ErrInvalidCredentials
+	}
+
+	newHash, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+
+	changedAt := time.Now()
+	if err := s.userRepo.UpdatePasswordAndBumpVersion(userID, string(newHash), changedAt); err != nil {
+		return "", time.Time{}, err
+	}
+
+	reloaded, err := s.userRepo.FindByID(userID)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	token, err := s.GenerateJWT(reloaded)
+	if err != nil {
+		return "", time.Time{}, err
+	}
+	return token, changedAt, nil
 }
 
 func (s *AuthService) EnsureAdmin(username, password string) error {
