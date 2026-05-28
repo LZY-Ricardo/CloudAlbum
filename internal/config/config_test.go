@@ -21,8 +21,8 @@ func TestLoadAppliesSecurityDefaults(t *testing.T) {
 	if cfg.Token.DefaultExpiresIn != 7*24*time.Hour {
 		t.Fatalf("DefaultExpiresIn = %v", cfg.Token.DefaultExpiresIn)
 	}
-	if cfg.Token.AllowNoExpiry != true {
-		t.Fatalf("AllowNoExpiry = %v, want true", cfg.Token.AllowNoExpiry)
+	if cfg.Token.AllowNoExpiry != false {
+		t.Fatalf("AllowNoExpiry = %v, want false", cfg.Token.AllowNoExpiry)
 	}
 	if cfg.UploadRateLimit.Window != time.Minute {
 		t.Fatalf("Window = %v, want 1m", cfg.UploadRateLimit.Window)

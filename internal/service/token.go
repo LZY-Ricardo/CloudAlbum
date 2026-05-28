@@ -47,10 +47,12 @@ func (s *TokenService) Create(userID uint, name, scope string, expiresIn *int64)
 		expiresAt := time.Now().Add(time.Duration(*expiresIn) * time.Second)
 		token.ExpiresAt = &expiresAt
 	} else if s.provider != nil {
-		defaultTTL := s.provider.Get().Token.DefaultExpiresIn
-		if defaultTTL > 0 {
-			expiresAt := time.Now().Add(defaultTTL)
+		policy := s.provider.Get().Token
+		if policy.DefaultExpiresIn > 0 {
+			expiresAt := time.Now().Add(policy.DefaultExpiresIn)
 			token.ExpiresAt = &expiresAt
+		} else if !policy.AllowNoExpiry {
+			return nil, "", errors.New("invalid expires_in")
 		}
 	}
 

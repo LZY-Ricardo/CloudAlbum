@@ -9,7 +9,9 @@ import (
 	"path/filepath"
 	"strings"
 
+	"cloudalbum/internal/config"
 	imgpkg "cloudalbum/internal/image"
+	"cloudalbum/internal/security"
 	"cloudalbum/internal/storage"
 	"github.com/gin-gonic/gin"
 )
@@ -17,10 +19,11 @@ import (
 type PublicHandler struct {
 	store     storage.Storage
 	processor *imgpkg.Processor
+	provider  *config.Provider
 }
 
-func NewPublicHandler(store storage.Storage, processor *imgpkg.Processor) *PublicHandler {
-	return &PublicHandler{store: store, processor: processor}
+func NewPublicHandler(store storage.Storage, processor *imgpkg.Processor, provider *config.Provider) *PublicHandler {
+	return &PublicHandler{store: store, processor: processor, provider: provider}
 }
 
 func (h *PublicHandler) Image(c *gin.Context) {
@@ -42,6 +45,14 @@ func (h *PublicHandler) serve(c *gin.Context, key string) {
 		return
 	}
 
+	if h.provider != nil {
+		cfg := h.provider.Get().PublicAccess
+		if !security.AllowPublicAccess(cfg.Mode, cfg.AllowedRefererHosts, c.GetHeader("Referer")) {
+			c.JSON(http.StatusForbidden, gin.H{"error": "public_access_forbidden"})
+			return
+		}
+	}
+
 	reader, err := h.store.Get(context.Background(), key)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) || strings.Contains(strings.ToLower(err.Error()), "not found") {
@@ -56,6 +67,7 @@ func (h *PublicHandler) serve(c *gin.Context, key string) {
 	if contentType := extToContentType(filepath.Ext(key)); contentType != "" {
 		c.Header("Content-Type", contentType)
 	}
+	c.Header("Vary", "Referer")
 	c.Header("Cache-Control", "public, max-age=31536000")
 	_, _ = io.Copy(c.Writer, reader)
 }

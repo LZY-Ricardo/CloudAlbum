@@ -309,8 +309,12 @@ func (s *ImageService) storeProcessedImage(userID uint, originalName string, dat
 	}
 
 	key := buildStorageKey(userID, originalName)
+	storedOriginal := data
+	if len(result.OriginalData) > 0 {
+		storedOriginal = result.OriginalData
+	}
 	ctx := context.Background()
-	if err := s.store.Save(ctx, key, bytes.NewReader(data)); err != nil {
+	if err := s.store.Save(ctx, key, bytes.NewReader(storedOriginal)); err != nil {
 		return nil, fmt.Errorf("save image: %w", err)
 	}
 	for sizeName, thumbData := range result.Thumbnails {

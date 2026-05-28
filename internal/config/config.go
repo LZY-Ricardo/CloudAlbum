@@ -118,7 +118,6 @@ func Load(path string) (*Config, error) {
 	if cfg.Token.DefaultExpiresIn == 0 {
 		cfg.Token.DefaultExpiresIn = 7 * 24 * time.Hour
 	}
-	cfg.Token.AllowNoExpiry = true
 	if cfg.UploadRateLimit.Window == 0 {
 		cfg.UploadRateLimit.Window = time.Minute
 	}

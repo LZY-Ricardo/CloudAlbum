@@ -104,6 +104,36 @@ func TestTokenServiceCreateUsesDefaultExpiry(t *testing.T) {
 	}
 }
 
+func TestTokenServiceCreateAllowsNoExpiryWhenConfigured(t *testing.T) {
+	db := newTestTokenServiceDB(t)
+	tokenRepo := repository.NewTokenRepository(db)
+	provider := config.NewProvider(config.Config{Token: config.TokenPolicyConfig{AllowNoExpiry: true, DefaultExpiresIn: 0}}, config.Overrides{})
+	svc := NewTokenService(tokenRepo, provider)
+
+	created, _, err := svc.Create(7, "cli", "upload", nil)
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	if created.ExpiresAt != nil {
+		t.Fatalf("ExpiresAt = %v, want nil", created.ExpiresAt)
+	}
+}
+
+func TestTokenServiceCreateRejectsNoExpiryWhenDisallowed(t *testing.T) {
+	db := newTestTokenServiceDB(t)
+	tokenRepo := repository.NewTokenRepository(db)
+	provider := config.NewProvider(config.Config{Token: config.TokenPolicyConfig{AllowNoExpiry: false, DefaultExpiresIn: 0}}, config.Overrides{})
+	svc := NewTokenService(tokenRepo, provider)
+
+	_, _, err := svc.Create(7, "cli", "upload", nil)
+	if err == nil {
+		t.Fatal("Create() error = nil, want invalid expires_in")
+	}
+	if err.Error() != "invalid expires_in" {
+		t.Fatalf("Create() error = %v, want invalid expires_in", err)
+	}
+}
+
 func testTokenProvider() *config.Provider {
 	base := config.Config{Token: config.TokenPolicyConfig{AllowNoExpiry: true, DefaultExpiresIn: 7 * 24 * time.Hour}}
 	return config.NewProvider(base, config.Overrides{})
