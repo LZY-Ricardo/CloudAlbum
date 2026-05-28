@@ -3,7 +3,9 @@ package service
 import (
 	"strings"
 	"testing"
+	"time"
 
+	"cloudalbum/internal/config"
 	"cloudalbum/internal/model"
 	"cloudalbum/internal/repository"
 	"gorm.io/driver/sqlite"
@@ -13,9 +15,9 @@ import (
 func TestTokenServiceCreateAndValidate(t *testing.T) {
 	db := newTestTokenServiceDB(t)
 	tokenRepo := repository.NewTokenRepository(db)
-	svc := NewTokenService(tokenRepo)
+	svc := NewTokenService(tokenRepo, testTokenProvider())
 
-	created, rawToken, err := svc.Create(7, "cli", "upload")
+	created, rawToken, err := svc.Create(7, "cli", "upload", nil)
 	if err != nil {
 		t.Fatalf("Create() error = %v", err)
 	}
@@ -47,10 +49,101 @@ func TestTokenServiceCreateAndValidate(t *testing.T) {
 	}
 }
 
+func TestTokenServiceValidateRejectsExpiredToken(t *testing.T) {
+	db := newTestTokenServiceDB(t)
+	tokenRepo := repository.NewTokenRepository(db)
+	svc := NewTokenService(tokenRepo, testTokenProvider())
+
+	expiresIn := int64(1)
+	created, rawToken, err := svc.Create(7, "cli", "upload", &expiresIn)
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	if created.ExpiresAt == nil {
+		t.Fatal("Create() should set expires_at when expires_in provided")
+	}
+
+	validated, err := svc.Validate(rawToken)
+	if err != nil {
+		t.Fatalf("Validate() immediate error = %v", err)
+	}
+	if validated.LastUsedAt == nil {
+		t.Fatal("LastUsedAt should be updated before expiry")
+	}
+
+	expiredAt := created.CreatedAt.Add(-time.Minute)
+	if err := db.Model(&model.APIToken{}).Where("id = ?", created.ID).Update("expires_at", expiredAt).Error; err != nil {
+		t.Fatalf("expire token: %v", err)
+	}
+	before := *validated.LastUsedAt
+	_, err = svc.Validate(rawToken)
+	if err == nil {
+		t.Fatal("Validate() error = nil, want invalid token")
+	}
+
+	reloaded, err := tokenRepo.FindByID(created.ID)
+	if err != nil {
+		t.Fatalf("FindByID() error = %v", err)
+	}
+	if reloaded.LastUsedAt == nil || !reloaded.LastUsedAt.Equal(before) {
+		t.Fatalf("LastUsedAt changed on expired token: before=%v after=%v", before, reloaded.LastUsedAt)
+	}
+}
+
+func TestTokenServiceCreateUsesDefaultExpiry(t *testing.T) {
+	db := newTestTokenServiceDB(t)
+	tokenRepo := repository.NewTokenRepository(db)
+	svc := NewTokenService(tokenRepo, testTokenProvider())
+
+	created, _, err := svc.Create(7, "cli", "upload", nil)
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	if created.ExpiresAt == nil {
+		t.Fatal("default expiry should be applied")
+	}
+}
+
+func TestTokenServiceCreateAllowsNoExpiryWhenConfigured(t *testing.T) {
+	db := newTestTokenServiceDB(t)
+	tokenRepo := repository.NewTokenRepository(db)
+	provider := config.NewProvider(config.Config{Token: config.TokenPolicyConfig{AllowNoExpiry: true, DefaultExpiresIn: 0}}, config.Overrides{})
+	svc := NewTokenService(tokenRepo, provider)
+
+	created, _, err := svc.Create(7, "cli", "upload", nil)
+	if err != nil {
+		t.Fatalf("Create() error = %v", err)
+	}
+	if created.ExpiresAt != nil {
+		t.Fatalf("ExpiresAt = %v, want nil", created.ExpiresAt)
+	}
+}
+
+func TestTokenServiceCreateRejectsNoExpiryWhenDisallowed(t *testing.T) {
+	db := newTestTokenServiceDB(t)
+	tokenRepo := repository.NewTokenRepository(db)
+	provider := config.NewProvider(config.Config{Token: config.TokenPolicyConfig{AllowNoExpiry: false, DefaultExpiresIn: 0}}, config.Overrides{})
+	svc := NewTokenService(tokenRepo, provider)
+
+	_, _, err := svc.Create(7, "cli", "upload", nil)
+	if err == nil {
+		t.Fatal("Create() error = nil, want invalid expires_in")
+	}
+	if err.Error() != "invalid expires_in" {
+		t.Fatalf("Create() error = %v, want invalid expires_in", err)
+	}
+}
+
+func testTokenProvider() *config.Provider {
+	base := config.Config{Token: config.TokenPolicyConfig{AllowNoExpiry: true, DefaultExpiresIn: 7 * 24 * time.Hour}}
+	return config.NewProvider(base, config.Overrides{})
+}
+
 func newTestTokenServiceDB(t *testing.T) *gorm.DB {
 	t.Helper()
 
-	db, err := gorm.Open(sqlite.Open("file::memory:?cache=shared"), &gorm.Config{})
+	dsn := "file:" + strings.ReplaceAll(t.Name(), "/", "_") + "?mode=memory&cache=shared"
+	db, err := gorm.Open(sqlite.Open(dsn), &gorm.Config{})
 	if err != nil {
 		t.Fatalf("open test database: %v", err)
 	}

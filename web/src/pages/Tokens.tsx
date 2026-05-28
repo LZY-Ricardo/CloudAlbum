@@ -6,6 +6,7 @@ type TokenItem = {
   name: string
   scope: string
   last_used_at?: string | null
+  expires_at?: string | null
 }
 
 export default function Tokens() {
@@ -13,6 +14,7 @@ export default function Tokens() {
   const [name, setName] = useState('')
   const [scope, setScope] = useState('upload')
   const [rawToken, setRawToken] = useState('')
+  const [expiresInHours, setExpiresInHours] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -38,9 +40,21 @@ export default function Tokens() {
     setLoading(true)
     setError('')
     try {
-      const response = await client.post('/tokens', { name, scope })
+      const hours = expiresInHours.trim()
+      const payload: { name: string; scope: string; expires_in?: number } = { name, scope }
+      if (hours) {
+        const parsedHours = Number(hours)
+        if (!Number.isFinite(parsedHours) || parsedHours <= 0) {
+          setError('过期时间必须是大于 0 的数字。')
+          setLoading(false)
+          return
+        }
+        payload.expires_in = parsedHours * 3600
+      }
+      const response = await client.post('/tokens', payload)
       setRawToken(response.data.raw_token ?? '')
       setName('')
+      setExpiresInHours('')
       await fetchTokens()
     } catch {
       setError('创建 Token 失败。')
@@ -75,6 +89,13 @@ export default function Tokens() {
             <option value="upload">上传</option>
             <option value="full">完整权限</option>
           </select>
+          <input
+            className="url-input"
+            value={expiresInHours}
+            onChange={(e) => setExpiresInHours(e.target.value)}
+            placeholder="过期时间（小时，可选）"
+            inputMode="numeric"
+          />
         </div>
         <div className="management-actions">
           <button type="button" className="gradient-button" onClick={() => void createToken()} disabled={loading}>
@@ -94,17 +115,25 @@ export default function Tokens() {
         {tokens.length === 0 ? (
           <div className="glass-panel empty-state">还没有创建任何 Token。</div>
         ) : (
-          tokens.map((token) => (
-            <article key={token.id} className="glass-panel management-card">
-              <div>
-                <div className="result-name">{token.name}</div>
-                <div className="result-meta">Scope: {token.scope} · Last used: {token.last_used_at || 'Never'}</div>
-              </div>
-              <button type="button" className="ghost-button danger-button" onClick={() => void deleteToken(token.id)}>
-                删除
-              </button>
-            </article>
-          ))
+          tokens.map((token) => {
+            const expiresLabel = !token.expires_at
+              ? '永不过期'
+              : new Date(token.expires_at).getTime() <= Date.now()
+                ? '已过期'
+                : `过期于 ${new Date(token.expires_at).toLocaleString()}`
+
+            return (
+              <article key={token.id} className="glass-panel management-card">
+                <div>
+                  <div className="result-name">{token.name}</div>
+                  <div className="result-meta">Scope: {token.scope} · Last used: {token.last_used_at || 'Never'} · {expiresLabel}</div>
+                </div>
+                <button type="button" className="ghost-button danger-button" onClick={() => void deleteToken(token.id)}>
+                  删除
+                </button>
+              </article>
+            )
+          })
         )}
       </section>
     </div>

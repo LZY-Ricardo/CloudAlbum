@@ -8,11 +8,14 @@ import (
 )
 
 type Config struct {
-	Server   ServerConfig   `yaml:"server"`
-	Database DatabaseConfig `yaml:"database"`
-	Storage  StorageConfig  `yaml:"storage"`
-	Image    ImageConfig    `yaml:"image"`
-	Auth     AuthConfig     `yaml:"auth"`
+	Server          ServerConfig          `yaml:"server"`
+	Database        DatabaseConfig        `yaml:"database"`
+	Storage         StorageConfig         `yaml:"storage"`
+	Image           ImageConfig           `yaml:"image"`
+	Auth            AuthConfig            `yaml:"auth"`
+	Token           TokenPolicyConfig     `yaml:"token"`
+	UploadRateLimit UploadRateLimitConfig `yaml:"upload_rate_limit"`
+	PublicAccess    PublicAccessConfig    `yaml:"public_access"`
 }
 
 type ServerConfig struct {
@@ -63,6 +66,22 @@ type AuthConfig struct {
 	TokenExpire time.Duration `yaml:"token_expire"`
 }
 
+type TokenPolicyConfig struct {
+	AllowNoExpiry    bool          `yaml:"allow_no_expiry"`
+	DefaultExpiresIn time.Duration `yaml:"default_expires_in"`
+}
+
+type UploadRateLimitConfig struct {
+	Enabled     bool          `yaml:"enabled"`
+	Window      time.Duration `yaml:"window"`
+	MaxRequests int           `yaml:"max_requests"`
+}
+
+type PublicAccessConfig struct {
+	Mode                string   `yaml:"mode"`
+	AllowedRefererHosts []string `yaml:"allowed_referer_hosts"`
+}
+
 func Load(path string) (*Config, error) {
 	data, err := os.ReadFile(path)
 	if err != nil {
@@ -95,6 +114,18 @@ func Load(path string) (*Config, error) {
 	}
 	if cfg.Auth.TokenExpire == 0 {
 		cfg.Auth.TokenExpire = 7 * 24 * time.Hour
+	}
+	if cfg.Token.DefaultExpiresIn == 0 {
+		cfg.Token.DefaultExpiresIn = 7 * 24 * time.Hour
+	}
+	if cfg.UploadRateLimit.Window == 0 {
+		cfg.UploadRateLimit.Window = time.Minute
+	}
+	if cfg.UploadRateLimit.MaxRequests == 0 {
+		cfg.UploadRateLimit.MaxRequests = 20
+	}
+	if cfg.PublicAccess.Mode == "" {
+		cfg.PublicAccess.Mode = "off"
 	}
 	if cfg.Server.BaseURL == "" {
 		cfg.Server.BaseURL = "http://localhost:8080"

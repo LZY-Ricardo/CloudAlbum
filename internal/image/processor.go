@@ -14,12 +14,13 @@ import (
 )
 
 type ProcessResult struct {
-	Width      int
-	Height     int
-	Hash       string
-	Size       int64
-	MimeType   string
-	Thumbnails map[string][]byte
+	Width       int
+	Height      int
+	Hash        string
+	Size        int64
+	MimeType    string
+	OriginalData []byte
+	Thumbnails  map[string][]byte
 }
 
 type Processor struct {
@@ -42,16 +43,25 @@ func (p *Processor) Process(data []byte, mimeType string) (*ProcessResult, error
 
 	bounds := img.Bounds()
 	result := &ProcessResult{
-		Width:    bounds.Dx(),
-		Height:   bounds.Dy(),
-		Size:     int64(len(data)),
-		MimeType: mimeType,
+		Width:       bounds.Dx(),
+		Height:      bounds.Dy(),
+		Size:        int64(len(data)),
+		MimeType:    mimeType,
+		OriginalData: data,
 	}
 
-	hash := sha256.Sum256(data)
-	result.Hash = hex.EncodeToString(hash[:])
-
 	cfg := p.imageCfg()
+	if mimeType == "image/jpeg" && cfg.StripExif {
+		var originalBuf bytes.Buffer
+		if err := imaging.Encode(&originalBuf, img, imaging.JPEG, imaging.JPEGQuality(cfg.Quality)); err != nil {
+			return nil, fmt.Errorf("encode original jpeg: %w", err)
+		}
+		result.OriginalData = originalBuf.Bytes()
+		result.Size = int64(len(result.OriginalData))
+	}
+
+	hash := sha256.Sum256(result.OriginalData)
+	result.Hash = hex.EncodeToString(hash[:])
 	thumbFormat, thumbOptions := p.thumbnailEncoding()
 
 	result.Thumbnails = make(map[string][]byte)

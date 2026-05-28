@@ -28,6 +28,7 @@ func AuthMiddleware(authSvc *service.AuthService, tokenSvc *service.TokenService
 
 			c.Set("user_id", apiToken.UserID)
 			c.Set("auth_type", "api_token")
+			c.Set("token_id", apiToken.ID)
 			c.Set("token_scope", apiToken.Scope)
 			c.Next()
 			return

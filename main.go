@@ -12,6 +12,7 @@ import (
 	"cloudalbum/internal/handler"
 	imgpkg "cloudalbum/internal/image"
 	"cloudalbum/internal/model"
+	"cloudalbum/internal/ratelimit"
 	"cloudalbum/internal/repository"
 	"cloudalbum/internal/router"
 	"cloudalbum/internal/service"
@@ -58,7 +59,12 @@ func main() {
 		}
 	}
 	authSvc := service.NewAuthService(userRepo, tokenRepo, provider)
-	tokenSvc := service.NewTokenService(tokenRepo)
+	tokenSvc := service.NewTokenService(tokenRepo, provider)
+	uploadLimiter := ratelimit.NewLimiter(
+		provider.Get().UploadRateLimit.Enabled,
+		provider.Get().UploadRateLimit.Window,
+		provider.Get().UploadRateLimit.MaxRequests,
+	)
 	processor := imgpkg.NewProcessor(provider)
 	imageSvc := service.NewImageService(imageRepo, store, processor, provider)
 	albumSvc := service.NewAlbumService(albumRepo, imageRepo)
@@ -66,9 +72,9 @@ func main() {
 
 	authHandler := handler.NewAuthHandler(authSvc, userRepo)
 	tokenHandler := handler.NewTokenHandler(tokenSvc)
-	imageHandler := handler.NewImageHandler(imageSvc)
+	imageHandler := handler.NewImageHandler(imageSvc, uploadLimiter)
 	albumHandler := handler.NewAlbumHandler(albumSvc)
-	publicHandler := handler.NewPublicHandler(store, processor)
+	publicHandler := handler.NewPublicHandler(store, processor, provider)
 	settingsHandler := handler.NewSettingsHandler(settingsSvc)
 
 	if err := authSvc.EnsureAdmin("admin", "admin123"); err != nil {

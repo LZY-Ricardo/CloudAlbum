@@ -19,8 +19,9 @@ func NewTokenHandler(tokenSvc *service.TokenService) *TokenHandler {
 }
 
 type CreateTokenRequest struct {
-	Name  string `json:"name" binding:"required"`
-	Scope string `json:"scope" binding:"required,oneof=read upload full"`
+	Name      string `json:"name" binding:"required"`
+	Scope     string `json:"scope" binding:"required,oneof=read upload full"`
+	ExpiresIn *int64 `json:"expires_in,omitempty"`
 }
 
 func (h *TokenHandler) List(c *gin.Context) {
@@ -40,8 +41,12 @@ func (h *TokenHandler) Create(c *gin.Context) {
 		return
 	}
 
-	token, rawToken, err := h.tokenSvc.Create(c.GetUint("user_id"), req.Name, req.Scope)
+	token, rawToken, err := h.tokenSvc.Create(c.GetUint("user_id"), req.Name, req.Scope, req.ExpiresIn)
 	if err != nil {
+		if err.Error() == "invalid expires_in" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid_request"})
+			return
+		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}

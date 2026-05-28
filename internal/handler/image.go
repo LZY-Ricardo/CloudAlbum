@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"strings"
 
+	"cloudalbum/internal/ratelimit"
 	"cloudalbum/internal/repository"
 	"cloudalbum/internal/service"
 	"github.com/gin-gonic/gin"
@@ -13,14 +14,19 @@ import (
 )
 
 type ImageHandler struct {
-	imageSvc *service.ImageService
+	imageSvc      *service.ImageService
+	uploadLimiter *ratelimit.Limiter
 }
 
-func NewImageHandler(imageSvc *service.ImageService) *ImageHandler {
-	return &ImageHandler{imageSvc: imageSvc}
+func NewImageHandler(imageSvc *service.ImageService, uploadLimiter *ratelimit.Limiter) *ImageHandler {
+	return &ImageHandler{imageSvc: imageSvc, uploadLimiter: uploadLimiter}
 }
 
 func (h *ImageHandler) Upload(c *gin.Context) {
+	if h.limitUpload(c) {
+		return
+	}
+
 	form, err := c.MultipartForm()
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "multipart form required"})
@@ -52,6 +58,10 @@ func (h *ImageHandler) Upload(c *gin.Context) {
 }
 
 func (h *ImageHandler) UploadURL(c *gin.Context) {
+	if h.limitUpload(c) {
+		return
+	}
+
 	var req struct {
 		URL     string `json:"url" binding:"required"`
 		AlbumID *uint  `json:"album_id"`
@@ -225,6 +235,36 @@ func parseUintParam(c *gin.Context, name string) (uint, error) {
 		return 0, err
 	}
 	return uint(value), nil
+}
+
+func (h *ImageHandler) limitUpload(c *gin.Context) bool {
+	if h.uploadLimiter == nil {
+		return false
+	}
+	if err := h.uploadLimiter.Allow(uploadLimitKey(c)); err != nil {
+		if errors.Is(err, ratelimit.ErrRateLimited) {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": "rate_limit_exceeded"})
+			return true
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return true
+	}
+	return false
+}
+
+func uploadLimitKey(c *gin.Context) string {
+	if c.GetString("auth_type") == "jwt" {
+		return "jwt:user:" + strconv.FormatUint(uint64(c.GetUint("user_id")), 10)
+	}
+	if tokenID, ok := c.Get("token_id"); ok {
+		switch v := tokenID.(type) {
+		case uint:
+			return "token:" + strconv.FormatUint(uint64(v), 10)
+		case uint64:
+			return "token:" + strconv.FormatUint(v, 10)
+		}
+	}
+	return "user:" + strconv.FormatUint(uint64(c.GetUint("user_id")), 10)
 }
 
 func optionalUintFromString(raw string) (*uint, error) {

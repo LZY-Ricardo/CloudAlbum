@@ -44,3 +44,16 @@ image:
 auth:
   jwt_secret: "change-me-in-production"
   token_expire: 168h
+
+token:
+  allow_no_expiry: true
+  default_expires_in: 168h
+
+upload_rate_limit:
+  enabled: false
+  window: 1m
+  max_requests: 20
+
+public_access:
+  mode: off
+  allowed_referer_hosts: []
