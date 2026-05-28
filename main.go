@@ -58,7 +58,7 @@ func main() {
 		}
 	}
 	authSvc := service.NewAuthService(userRepo, tokenRepo, provider)
-	tokenSvc := service.NewTokenService(tokenRepo)
+	tokenSvc := service.NewTokenService(tokenRepo, provider)
 	processor := imgpkg.NewProcessor(provider)
 	imageSvc := service.NewImageService(imageRepo, store, processor, provider)
 	albumSvc := service.NewAlbumService(albumRepo, imageRepo)
